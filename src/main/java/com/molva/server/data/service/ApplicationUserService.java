@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 import javax.persistence.EntityNotFoundException;
 import java.security.InvalidParameterException;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class ApplicationUserService implements UserDetailsService {
@@ -45,7 +47,11 @@ public class ApplicationUserService implements UserDetailsService {
   }
 
   public boolean isDataValid(String username, String password) {
-    if (username.length() <= 3 || username.length() > 30 || password.length() <= 6 || password.length() > 30) {
+    Pattern usernamePattern = Pattern.compile("/^[a-z0-9_-]{3,16}$/");
+    Pattern passwordPattern = Pattern.compile("/^[a-zA-Z0-9_-]{6,18}$/");
+    Matcher u = usernamePattern.matcher(username);
+    Matcher p = passwordPattern.matcher(password);
+    if (!u.find() || !p.find()) {
       return false;
     } else {
       return true;
