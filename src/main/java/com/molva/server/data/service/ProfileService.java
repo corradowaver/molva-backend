@@ -1,6 +1,6 @@
 package com.molva.server.data.service;
 
-import com.molva.server.data.exceptions.project.ProfileExceptions;
+import com.molva.server.data.exceptions.profile.ProfileExceptions;
 import com.molva.server.data.model.ApplicationUser;
 import com.molva.server.data.model.Profile;
 import com.molva.server.data.repository.ProfileRepository;

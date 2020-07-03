@@ -1,4 +1,4 @@
-package com.molva.server.data.exceptions.profile;
+package com.molva.server.data.exceptions.project;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
