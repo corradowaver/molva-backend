@@ -100,5 +100,4 @@ class ApplicationUserServiceTest {
         Arguments.of("superLongUsername", "SuperSuperLongPassword")
     );
   }
-  //trigger ci 4
 }
