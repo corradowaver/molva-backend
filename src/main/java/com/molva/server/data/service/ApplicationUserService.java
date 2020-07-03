@@ -47,15 +47,11 @@ public class ApplicationUserService implements UserDetailsService {
   }
 
   public boolean isDataValid(String username, String password) {
-    Pattern usernamePattern = Pattern.compile("/^[a-z0-9_-]{3,16}$/");
-    Pattern passwordPattern = Pattern.compile("/^[a-zA-Z0-9_-]{6,18}$/");
+    Pattern usernamePattern = Pattern.compile("^[a-z0-9_-]{3,16}$");
+    Pattern passwordPattern = Pattern.compile("^[a-zA-Z0-9_-]{6,18}$");
     Matcher u = usernamePattern.matcher(username);
     Matcher p = passwordPattern.matcher(password);
-    if (!u.find() || !p.find()) {
-      return false;
-    } else {
-      return true;
-    }
+    return u.find() && p.find();
   }
 
   @Override
