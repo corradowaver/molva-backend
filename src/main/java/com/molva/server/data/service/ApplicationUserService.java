@@ -4,6 +4,7 @@ import com.molva.server.data.exceptions.user.UserExceptions;
 import com.molva.server.data.model.ApplicationUser;
 import com.molva.server.data.repository.ApplicationUserRepository;
 import com.molva.server.security.roles.ApplicationUserRole;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -23,6 +24,7 @@ public class ApplicationUserService implements UserDetailsService {
 
   private final PasswordEncoder passwordEncoder;
 
+  @Autowired
   public ApplicationUserService(ApplicationUserRepository applicationUserRepository, PasswordEncoder passwordEncoder) {
     this.applicationUserRepository = applicationUserRepository;
     this.passwordEncoder = passwordEncoder;
