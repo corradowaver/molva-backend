@@ -1,10 +1,13 @@
 package com.molva.server.data.model;
 
+import lombok.Data;
+
 import javax.persistence.*;
 
 @Entity
 @Table(name = "project")
-public class Project {
+public @Data
+class Project {
 
   @Id
   @GeneratedValue(strategy = GenerationType.AUTO)
@@ -28,42 +31,10 @@ public class Project {
 
   }
 
-  public Project(Long id, String name, String description, String media) {
-    this.id = id;
+  public Project(String name, String description, String media) {
     this.name = name;
     this.description = description;
     this.media = media;
   }
 
-  public Long getId() {
-    return id;
-  }
-
-  public void setId(Long id) {
-    this.id = id;
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public void setName(String name) {
-    this.name = name;
-  }
-
-  public String getDescription() {
-    return description;
-  }
-
-  public void setDescription(String description) {
-    this.description = description;
-  }
-
-  public String getMedia() {
-    return media;
-  }
-
-  public void setMedia(String media) {
-    this.media = media;
-  }
 }
