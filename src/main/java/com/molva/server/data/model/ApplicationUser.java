@@ -21,6 +21,10 @@ public class ApplicationUser implements UserDetails {
   @Column(name = "password")
   private String password;
 
+  @OneToOne
+  @JoinColumn (name="profile")
+  private Profile profile;
+
   @Column(name = "granted_authorities")
   private ApplicationUserRole applicationUserRole;
 
