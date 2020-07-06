@@ -5,10 +5,12 @@ import com.molva.server.data.model.Profile;
 import com.molva.server.data.model.Project;
 import com.molva.server.data.repository.ProjectRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 
+@Service
 public class ProjectService {
   private final ProjectRepository projectRepository;
 
