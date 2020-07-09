@@ -20,9 +20,6 @@ class Profile {
   @Column(name = "lastname")
   private String lastname;
 
-  @Column(name = "email")
-  private String email;
-
   @Column(name = "photo")
   private String photo;
 
@@ -36,10 +33,9 @@ class Profile {
   public Profile() {
   }
 
-  public Profile(String firstname, String lastname, String email, String photo) {
+  public Profile(String firstname, String lastname, String photo) {
     this.firstname = firstname;
     this.lastname = lastname;
-    this.email = email;
     this.photo = photo;
   }
 

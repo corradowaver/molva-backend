@@ -41,6 +41,7 @@ public class ProfileService {
     if (profileWithProvidedApplicationUser.isPresent()) {
       throw new ProfileExceptions.ProfileExistsException();
     }
+    profile.setApplicationUser(applicationUser);
     return profileRepository.save(profile);
   }
 

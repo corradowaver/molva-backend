@@ -9,6 +9,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.crypto.SecretKey;
@@ -17,64 +18,42 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.Date;
 
 public class JwtTokenVerifier extends OncePerRequestFilter {
 
   private final SecretKey secretKey;
-  private final JwtConfig jwtConfig;
+  private final JwtProvider jwtProvider;
 
   public JwtTokenVerifier(SecretKey secretKey,
-                          JwtConfig jwtConfig) {
+                          JwtProvider jwtProvider) {
     this.secretKey = secretKey;
-    this.jwtConfig = jwtConfig;
+    this.jwtProvider = jwtProvider;
   }
 
   @Override
   protected void doFilterInternal(HttpServletRequest request,
                                   HttpServletResponse response,
                                   FilterChain filterChain) throws ServletException, IOException {
-
-    String authorizationHeader = request.getHeader(jwtConfig.getAuthorizationHeader());
-
-    if (Strings.isNullOrEmpty(authorizationHeader) || !authorizationHeader.startsWith(jwtConfig.getTokenPrefix())) {
+    String token = jwtProvider.resolveToken(request);
+    if (token == null) {
       filterChain.doFilter(request, response);
       return;
     }
-
-    String token = authorizationHeader.replace(jwtConfig.getTokenPrefix(), "");
-
-    try {
-
-      Jws<Claims> claimsJws = Jwts.parser()
-          .setSigningKey(secretKey)
-          .parseClaimsJws(token);
-
-      Claims body = claimsJws.getBody();
-
-      String username = body.getSubject();
-
-      List<Map<String, String>> authorities = (List<Map<String, String>>) body.get("authorities");
-
-      Set<SimpleGrantedAuthority> simpleGrantedAuthorities = authorities
-          .stream()
-          .map(m -> new SimpleGrantedAuthority(m.get("authority")))
-          .collect(Collectors.toSet());
-
-      Authentication authentication = new UsernamePasswordAuthenticationToken(
-        username,
-        null,
-        simpleGrantedAuthorities
-      );
-      SecurityContextHolder.getContext().setAuthentication(authentication);
-    } catch (JwtException e) {
-      throw new IllegalStateException(String.format("Token %s cannot be trusted", token));
-    }
-
+    validateToken(token);
+    Authentication authentication = jwtProvider.getTokenAuthentication(token);
+    SecurityContextHolder.getContext().setAuthentication(authentication);
     filterChain.doFilter(request, response);
+  }
 
+  public void validateToken(String token) {
+    try {
+      Jws<Claims> claims = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token);
+      if (!claims.getBody().getExpiration().before(new Date())) {
+        throw new IllegalStateException("Expired token");
+      }
+    } catch (JwtException | IllegalArgumentException e) {
+      throw new IllegalStateException("Invalid token");
+    }
   }
 }

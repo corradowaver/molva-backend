@@ -1,11 +1,15 @@
 package com.molva.server.data.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.molva.server.security.roles.ApplicationUserRole;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.*;
 import java.util.Collection;
+
+import static com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY;
 
 @Entity
 @Table(name = "application_user")
@@ -18,11 +22,16 @@ public class ApplicationUser implements UserDetails {
   @Column(name = "login")
   private String username;
 
+  @Column(name = "email")
+  private String email;
+
   @Column(name = "password")
+  @JsonProperty(access = WRITE_ONLY)
   private String password;
 
-  @OneToOne
-  @JoinColumn (name="profile")
+  @OneToOne(cascade = CascadeType.REMOVE)
+  @JsonIgnore
+  @JoinColumn(name = "profile")
   private Profile profile;
 
   @Column(name = "granted_authorities")
@@ -46,6 +55,7 @@ public class ApplicationUser implements UserDetails {
 
   public ApplicationUser(String username,
                          String password,
+                         String email,
                          ApplicationUserRole applicationUserRole,
                          boolean isAccountNonExpired,
                          boolean isAccountNonLocked,
@@ -53,6 +63,7 @@ public class ApplicationUser implements UserDetails {
                          boolean isEnabled) {
     this.username = username;
     this.password = password;
+    this.email = email;
     this.applicationUserRole = applicationUserRole;
     this.isAccountNonExpired = isAccountNonExpired;
     this.isAccountNonLocked = isAccountNonLocked;
@@ -61,9 +72,11 @@ public class ApplicationUser implements UserDetails {
   }
 
   public ApplicationUser(String username,
-                         String password) {
+                         String password,
+                         String email) {
     this.username = username;
     this.password = password;
+    this.email = email;
   }
 
   @Override
@@ -75,6 +88,10 @@ public class ApplicationUser implements UserDetails {
     return id;
   }
 
+  public String getEmail() {
+    return email;
+  }
+
   @Override
   public String getPassword() {
     return password;
@@ -83,6 +100,10 @@ public class ApplicationUser implements UserDetails {
   @Override
   public String getUsername() {
     return username;
+  }
+
+  public Profile getProfile() {
+    return profile;
   }
 
   @Override
@@ -103,6 +124,10 @@ public class ApplicationUser implements UserDetails {
   @Override
   public boolean isEnabled() {
     return isEnabled;
+  }
+
+  public void setId(Long id) {
+    this.id = id;
   }
 
   public void setUsername(String username) {
@@ -131,5 +156,14 @@ public class ApplicationUser implements UserDetails {
 
   public void setEnabled(boolean enabled) {
     isEnabled = enabled;
+  }
+
+  public void setEmail(String email) {
+    this.email = email;
+  }
+
+
+  public void setProfile(Profile profile) {
+    this.profile = profile;
   }
 }
