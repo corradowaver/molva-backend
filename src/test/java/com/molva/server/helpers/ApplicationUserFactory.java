@@ -12,7 +12,7 @@ import java.util.List;
 @Configuration
 public class ApplicationUserFactory {
   public ApplicationUser createApplicationUser() {
-    return new ApplicationUser("username", "password");
+    return new ApplicationUser("username", "password", "email@mail.com");
   }
 
   public List<ApplicationUser> createApplicationUsers() {
