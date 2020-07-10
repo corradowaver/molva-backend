@@ -3,6 +3,7 @@ package com.molva.server.data.service;
 import com.molva.server.data.exceptions.user.UserExceptions;
 import com.molva.server.data.model.ApplicationUser;
 import com.molva.server.data.repository.ApplicationUserRepository;
+import com.molva.server.helpers.ApplicationUserFactory;
 import com.molva.server.security.roles.ApplicationUserRole;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -26,13 +27,16 @@ class ApplicationUserServiceTest {
   @Autowired
   ApplicationUserService service;
 
+  @Autowired
+  ApplicationUserFactory applicationUserFactory;
+
   @MockBean
   private ApplicationUserRepository repository;
 
   @ParameterizedTest
   @MethodSource("validDataSource")
-  void registerUserMustReturnCorrectUserIfValidData(String username, String password) {
-    ApplicationUser newUser = new ApplicationUser(username, password);
+  void registerUserMustReturnCorrectUserIfValidData(String username, String password, String email) {
+    ApplicationUser newUser = new ApplicationUser(username, password, email);
     doReturn(newUser).when(repository).save(any(ApplicationUser.class));
     service.registerUser(newUser, ApplicationUserRole.MODERATOR);
     verify(repository, times(1)).save(newUser);
@@ -40,8 +44,8 @@ class ApplicationUserServiceTest {
 
   @ParameterizedTest
   @MethodSource("invalidDataSource")
-  void registerUserMustFailIfInvalidData(String username, String password) {
-    ApplicationUser newUser = new ApplicationUser(username, password);
+  void registerUserMustFailIfInvalidData(String username, String password, String email) {
+    ApplicationUser newUser = new ApplicationUser(username, password, email);
     doReturn(null).when(repository).save(any(ApplicationUser.class));
     assertThrows(UserExceptions.UserDataIsInvalidException.class,
         () -> service.registerUser(newUser, ApplicationUserRole.MODERATOR));
@@ -49,7 +53,7 @@ class ApplicationUserServiceTest {
 
   @Test
   void registerUserMustFailIfUserAlreadyExists() {
-    ApplicationUser existingUser = new ApplicationUser("username", "password");
+    ApplicationUser existingUser = applicationUserFactory.createApplicationUser();
     doReturn(Optional.of(existingUser)).when(repository).findUserByUsername(existingUser.getUsername());
     assertThrows(UserExceptions.UserAlreadyExistsException.class,
         () -> service.registerUser(existingUser, ApplicationUserRole.MODERATOR));
@@ -57,21 +61,21 @@ class ApplicationUserServiceTest {
 
   @ParameterizedTest
   @MethodSource("validDataSource")
-  void isDataValidMustReturnTrueWithValidData(String username, String password) {
-    boolean isValid = service.isDataValid(username, password);
+  void isDataValidMustReturnTrueWithValidData(String username, String password, String email) {
+    boolean isValid = service.isDataValid(username, password, email);
     assertTrue(isValid);
   }
 
   @ParameterizedTest
   @MethodSource("invalidDataSource")
-  void isDataValidMustReturnFalseWithInvalidData(String username, String password) {
-    boolean isValid = service.isDataValid(username, password);
+  void isDataValidMustReturnFalseWithInvalidData(String username, String password, String email) {
+    boolean isValid = service.isDataValid(username, password, email);
     assertFalse(isValid);
   }
 
   @Test
   void loadUserByUsername() {
-    UserDetails user = new ApplicationUser("username1", "password1");
+    UserDetails user = applicationUserFactory.createApplicationUser();
     doReturn(Optional.of(user)).when(repository).findUserByUsername(user.getUsername());
     UserDetails returnedUser = service.loadUserByUsername(user.getUsername());
     assertEquals(returnedUser, user);
@@ -79,7 +83,7 @@ class ApplicationUserServiceTest {
 
   @Test
   void loadUserById() {
-    UserDetails user = new ApplicationUser("username1", "password1");
+    UserDetails user = applicationUserFactory.createApplicationUser();
     doReturn(Optional.of(user)).when(repository).findById(1L);
     UserDetails returnedUser = service.loadUserById(1L);
     assertEquals(returnedUser, user);
@@ -87,17 +91,17 @@ class ApplicationUserServiceTest {
 
   private static Stream<Arguments> validDataSource() {
     return Stream.of(
-        Arguments.of("username", "password"),
-        Arguments.of("username1", "ThePassword1"),
-        Arguments.of("us_", "pwd-_-")
+        Arguments.of("username", "password", "valid@email.com"),
+        Arguments.of("username1", "ThePassword1", "valid@email.com"),
+        Arguments.of("us_", "pwd-_-", "valid@email.com")
     );
   }
 
   private static Stream<Arguments> invalidDataSource() {
     return Stream.of(
-        Arguments.of("us", "pwd"),
-        Arguments.of("username@", "password!"),
-        Arguments.of("superLongUsername", "SuperSuperLongPassword")
+        Arguments.of("us", "pwd", "a1"),
+        Arguments.of("username@", "password!", "email"),
+        Arguments.of("superLongUsername", "SuperSuperLongPassword", "invalid@mail")
     );
   }
 }
