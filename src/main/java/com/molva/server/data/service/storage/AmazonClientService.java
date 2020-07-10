@@ -27,17 +27,20 @@ public class AmazonClientService {
   private AmazonS3 s3client;
   private Logger logger = LoggerFactory.getLogger(AmazonClientService.class);
 
-  @Value("${aws.endpointUrl}")
-  private String endpointUrl;
   @Value("${aws.s3bucket.name}")
   private String bucketName;
+  @Value("${aws.path-to-profile-photos}")
+  private String pathToProfilePhotos;
+  @Value("${aws.path-to-project-previews}")
+  private String pathToProjectPreviews;
+  @Value("${aws.path-to-resources}")
+  private String pathToResources;
+  @Value("${aws.default-profile-photo}")
+  private String defaultProfilePhoto;
   @Value("${aws.accessKey}")
   private String accessKey;
   @Value("${aws.secretKey}")
   private String secretKey;
-
-  private String BUCKET_NAME = "nzrv-example-bucket";
-  private String PATH_TO_PROFILE_PHOTOS = "/molva-profile-photo/";
 
   @PostConstruct
   private void initializeAmazon() {
@@ -50,10 +53,19 @@ public class AmazonClientService {
   }
 
   public URL uploadNewProfilePhotoFile(MultipartFile multipartFile) throws IOException {
-    File file = FileConverters.convertMultiPartToImageFile(multipartFile);
+    File file = FileConverters.convertMultiPartToFile(multipartFile, FileConverters.PROFILE_PHOTO_KEY);
     String fileName = generateFileName(multipartFile);
-    URL url = s3client.getUrl(BUCKET_NAME, PATH_TO_PROFILE_PHOTOS + fileName);
-    uploadFileTos3bucket(fileName, file);
+    URL url = s3client.getUrl(bucketName, pathToProfilePhotos + fileName);
+    uploadFileTos3bucket(pathToProfilePhotos + fileName, file);
+    file.delete();
+    return url;
+  }
+
+  public URL uploadNewProjectPreviewFile(MultipartFile multipartFile) throws IOException {
+    File file = FileConverters.convertMultiPartToFile(multipartFile, FileConverters.PROJECT_PREVIEW_KEY);
+    String fileName = generateFileName(multipartFile);
+    URL url = s3client.getUrl(bucketName, pathToProjectPreviews + fileName);
+    uploadFileTos3bucket(pathToProjectPreviews + fileName, file);
     file.delete();
     return url;
   }
@@ -68,10 +80,9 @@ public class AmazonClientService {
         .withCannedAcl(CannedAccessControlList.PublicRead));
   }
 
-  public String deleteFileFromS3Bucket(String fileUrl) {
+  public void deleteFileFromS3Bucket(String fileUrl) {
     String fileName = fileUrl.substring(fileUrl.lastIndexOf("/") + 1);
     s3client.deleteObject(new DeleteObjectRequest(bucketName, fileName));
-    return "Successfully deleted";
   }
 
   public ByteArrayOutputStream downloadFile(String keyName) {

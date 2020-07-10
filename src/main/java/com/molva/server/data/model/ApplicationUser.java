@@ -8,6 +8,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.*;
 import java.util.Collection;
+import java.util.Set;
 
 import static com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY;
 
@@ -49,6 +50,9 @@ public class ApplicationUser implements UserDetails {
   @Column(name = "is_account_enabled")
   private boolean isEnabled;
 
+  @OneToMany(mappedBy = "profile", fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
+  private Set<Project> projects;
+
   public ApplicationUser() {
 
   }
@@ -57,6 +61,7 @@ public class ApplicationUser implements UserDetails {
                          String password,
                          String email,
                          ApplicationUserRole applicationUserRole,
+                         Set<Project> projects,
                          boolean isAccountNonExpired,
                          boolean isAccountNonLocked,
                          boolean isCredentialsNotExpired,
@@ -65,6 +70,7 @@ public class ApplicationUser implements UserDetails {
     this.password = password;
     this.email = email;
     this.applicationUserRole = applicationUserRole;
+    this.projects = projects;
     this.isAccountNonExpired = isAccountNonExpired;
     this.isAccountNonLocked = isAccountNonLocked;
     this.isCredentialsNotExpired = isCredentialsNotExpired;
@@ -90,6 +96,14 @@ public class ApplicationUser implements UserDetails {
 
   public String getEmail() {
     return email;
+  }
+
+  public Set<Project> getProjects() {
+    return projects;
+  }
+
+  public void setProjects(Set<Project> projects) {
+    this.projects = projects;
   }
 
   @Override

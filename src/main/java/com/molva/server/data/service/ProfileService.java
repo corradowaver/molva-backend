@@ -4,7 +4,10 @@ import com.molva.server.data.exceptions.profile.ProfileExceptions;
 import com.molva.server.data.model.ApplicationUser;
 import com.molva.server.data.model.Profile;
 import com.molva.server.data.repository.ProfileRepository;
+import com.molva.server.data.service.storage.AmazonClientService;
+import com.molva.server.data.service.storage.helpers.FileConverters;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,6 +16,13 @@ import java.util.Optional;
 @Service
 public class ProfileService {
   private final ProfileRepository profileRepository;
+
+  @Value("${aws.s3bucket.name}")
+  private String bucketName;
+  @Value("${aws.path-to-resources}")
+  private String pathToResources;
+  @Value("${aws.default-profile-photo}")
+  private String defaultProfilePhoto;
 
   @Autowired
   ProfileService(ProfileRepository profileRepository) {
@@ -41,6 +51,11 @@ public class ProfileService {
     if (profileWithProvidedApplicationUser.isPresent()) {
       throw new ProfileExceptions.ProfileExistsException();
     }
+    profile.setPhoto(bucketName
+        + pathToResources
+        + defaultProfilePhoto);
+    profile.setFirstname("");
+    profile.setLastname("");
     profile.setApplicationUser(applicationUser);
     return profileRepository.save(profile);
   }

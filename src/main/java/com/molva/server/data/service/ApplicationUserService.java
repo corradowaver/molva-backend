@@ -1,5 +1,6 @@
 package com.molva.server.data.service;
 
+import com.google.common.collect.Sets;
 import com.molva.server.data.exceptions.profile.ProfileExceptions;
 import com.molva.server.data.exceptions.user.UserExceptions;
 import com.molva.server.data.model.ApplicationUser;
@@ -41,6 +42,7 @@ public class ApplicationUserService implements UserDetailsService {
         throw new UserExceptions.UserAlreadyExistsException();
       }
       applicationUser.setApplicationUserRole(role);
+      applicationUser.setProjects(Sets.newHashSet());
       applicationUser.setPassword(passwordEncoder.encode(applicationUser.getPassword()));
       applicationUser.setAccountNonExpired(true);
       applicationUser.setAccountNonLocked(true);

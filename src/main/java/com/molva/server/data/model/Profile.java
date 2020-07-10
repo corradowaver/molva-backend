@@ -23,9 +23,6 @@ class Profile {
   @Column(name = "photo")
   private String photo;
 
-  @OneToMany(mappedBy = "profile", fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
-  private Set<Project> projects;
-
   @OneToOne(cascade = CascadeType.ALL)
   @JoinColumn(name = "application_user_fk", referencedColumnName = "id")
   private ApplicationUser applicationUser;

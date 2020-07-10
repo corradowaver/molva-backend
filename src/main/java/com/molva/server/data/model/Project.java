@@ -24,8 +24,8 @@ class Project {
   private String media;
 
   @ManyToOne
-  @JoinColumn(name = "profile_fk")
-  private Profile profile;
+  @JoinColumn(name = "application_user_fk")
+  private ApplicationUser applicationUser;
 
   public Project() {
 
