@@ -49,7 +49,7 @@ public class JwtTokenVerifier extends OncePerRequestFilter {
   public void validateToken(String token) {
     try {
       Jws<Claims> claims = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token);
-      if (!claims.getBody().getExpiration().before(new Date())) {
+      if (claims.getBody().getExpiration().before(new Date())) {
         throw new IllegalStateException("Expired token");
       }
     } catch (JwtException | IllegalArgumentException e) {
