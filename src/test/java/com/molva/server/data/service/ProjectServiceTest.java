@@ -1,9 +1,12 @@
 package com.molva.server.data.service;
 
+import com.amazonaws.services.opsworks.model.App;
 import com.molva.server.data.exceptions.project.ProjectExceptions;
+import com.molva.server.data.model.ApplicationUser;
 import com.molva.server.data.model.Profile;
 import com.molva.server.data.model.Project;
 import com.molva.server.data.repository.ProjectRepository;
+import com.molva.server.helpers.ApplicationUserFactory;
 import com.molva.server.helpers.ProfileFactory;
 import com.molva.server.helpers.ProjectFactory;
 import org.junit.jupiter.api.Test;
@@ -32,7 +35,7 @@ class ProjectServiceTest {
   ProjectFactory projectFactory;
 
   @Autowired
-  ProfileFactory profileFactory;
+  ApplicationUserFactory userFactory;
 
   @Test
   void loadAllProjects() {
@@ -51,11 +54,11 @@ class ProjectServiceTest {
   }
 
   @Test
-  void loadAllProjectsByProfile() {
-    Profile profile = profileFactory.createProfile();
+  void loadAllProjectsByApplicationUser() {
+    ApplicationUser user= userFactory.createApplicationUser();
     List<Project> projects = projectFactory.createProjectsList();
-    doReturn(Optional.of(projects)).when(repository).findProjectsByProfile(any(Profile.class));
-    List<Project> returnedProjects = service.loadAllProjectsByProfile(profile);
+    doReturn(Optional.of(projects)).when(repository).findAllByApplicationUser(any(ApplicationUser.class));
+    List<Project> returnedProjects = service.loadAllProjectsByApplicationUser(user);
     assertEquals(returnedProjects, projects);
   }
 
@@ -101,10 +104,10 @@ class ProjectServiceTest {
   }
 
   @Test
-  void loadAllProjectByProfileMustFailIfNotFound() {
-    doReturn(Optional.empty()).when(repository).findProjectsByProfile(any(Profile.class));
+  void loadAllProjectByApplicationUserMustFailIfNotFound() {
+    doReturn(Optional.empty()).when(repository).findAllByApplicationUser(any(ApplicationUser.class));
     assertThrows(ProjectExceptions.ProjectNotFoundException.class,
-        () -> service.loadAllProjectsByProfile(any(Profile.class)));
+        () -> service.loadAllProjectsByApplicationUser(any(ApplicationUser.class)));
   }
 
   @Test

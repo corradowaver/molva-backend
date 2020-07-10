@@ -38,7 +38,7 @@ public class ApplicationUserService implements UserDetailsService {
     if (username != null && password != null && email != null && isDataValid(username, password, email)) {
       Optional<ApplicationUser> userByUsername = applicationUserRepository.findAccountByUsername(applicationUser.getUsername());
       Optional<ApplicationUser> userByEmail = applicationUserRepository.findAccountByEmail(applicationUser.getEmail());
-      if (userByUsername.isPresent() && userByEmail.isPresent()) {
+      if (userByUsername.isPresent() || userByEmail.isPresent()) {
         throw new UserExceptions.UserAlreadyExistsException();
       }
       applicationUser.setApplicationUserRole(role);

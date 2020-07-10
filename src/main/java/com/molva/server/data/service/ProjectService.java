@@ -1,6 +1,7 @@
 package com.molva.server.data.service;
 
 import com.molva.server.data.exceptions.project.ProjectExceptions;
+import com.molva.server.data.model.ApplicationUser;
 import com.molva.server.data.model.Profile;
 import com.molva.server.data.model.Project;
 import com.molva.server.data.repository.ProjectRepository;
@@ -29,9 +30,9 @@ public class ProjectService {
         .orElseThrow(ProjectExceptions.ProjectNotFoundException::new);
   }
 
-  public List<Project> loadAllProjectsByProfile(Profile profile) {
+  public List<Project> loadAllProjectsByApplicationUser(ApplicationUser user) {
     return projectRepository
-        .findProjectsByProfile(profile)
+        .findAllByApplicationUser(user)
         .orElseThrow(ProjectExceptions.ProjectNotFoundException::new);
   }
 

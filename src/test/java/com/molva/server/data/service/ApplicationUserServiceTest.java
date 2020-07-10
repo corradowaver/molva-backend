@@ -52,9 +52,17 @@ class ApplicationUserServiceTest {
   }
 
   @Test
-  void registerUserMustFailIfUserAlreadyExists() {
+  void registerUserMustFailIfUsernameAlreadyExists() {
     ApplicationUser existingUser = applicationUserFactory.createApplicationUser();
-    doReturn(Optional.of(existingUser)).when(repository).findUserByUsername(existingUser.getUsername());
+    doReturn(Optional.of(existingUser)).when(repository).findAccountByUsername(existingUser.getUsername());
+    assertThrows(UserExceptions.UserAlreadyExistsException.class,
+        () -> service.registerUser(existingUser, ApplicationUserRole.MODERATOR));
+  }
+
+  @Test
+  void registerUserMustFailIfEmailAlreadyExists() {
+    ApplicationUser existingUser = applicationUserFactory.createApplicationUser();
+    doReturn(Optional.of(existingUser)).when(repository).findAccountByEmail(existingUser.getEmail());
     assertThrows(UserExceptions.UserAlreadyExistsException.class,
         () -> service.registerUser(existingUser, ApplicationUserRole.MODERATOR));
   }

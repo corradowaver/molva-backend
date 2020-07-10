@@ -50,7 +50,7 @@ public class ApplicationUser implements UserDetails {
   @Column(name = "is_account_enabled")
   private boolean isEnabled;
 
-  @OneToMany(mappedBy = "profile", fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
+  @OneToMany(mappedBy = "applicationUser", fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
   private Set<Project> projects;
 
   public ApplicationUser() {

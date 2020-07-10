@@ -56,7 +56,7 @@ public class AmazonClientService {
     File file = FileConverters.convertMultiPartToFile(multipartFile, FileConverters.PROFILE_PHOTO_KEY);
     String fileName = generateFileName(multipartFile);
     URL url = s3client.getUrl(bucketName, pathToProfilePhotos + fileName);
-    uploadFileTos3bucket(pathToProfilePhotos + fileName, file);
+    uploadFileTos3Bucket(pathToProfilePhotos + fileName, file);
     file.delete();
     return url;
   }
@@ -65,7 +65,7 @@ public class AmazonClientService {
     File file = FileConverters.convertMultiPartToFile(multipartFile, FileConverters.PROJECT_PREVIEW_KEY);
     String fileName = generateFileName(multipartFile);
     URL url = s3client.getUrl(bucketName, pathToProjectPreviews + fileName);
-    uploadFileTos3bucket(pathToProjectPreviews + fileName, file);
+    uploadFileTos3Bucket(pathToProjectPreviews + fileName, file);
     file.delete();
     return url;
   }
@@ -75,7 +75,7 @@ public class AmazonClientService {
         .replace(" ", "_");
   }
 
-  private void uploadFileTos3bucket(String fileName, File file) {
+  private void uploadFileTos3Bucket(String fileName, File file) {
     s3client.putObject(new PutObjectRequest(bucketName, fileName, file)
         .withCannedAcl(CannedAccessControlList.PublicRead));
   }
