@@ -6,7 +6,6 @@ import com.molva.server.data.model.ApplicationUser;
 import com.molva.server.data.model.Project;
 import com.molva.server.data.service.ApplicationUserService;
 import com.molva.server.data.service.ProjectService;
-import com.molva.server.data.service.storage.AmazonClientService;
 import com.molva.server.security.jwt.JwtProvider;
 import com.sun.istack.NotNull;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -14,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 
 //This is v1 of ProjectController, file upload might change
@@ -23,13 +23,11 @@ public class ProjectController {
 
   private final ProjectService projectService;
   private final ApplicationUserService applicationUserService;
-  private final AmazonClientService amazonClientService;
   private final JwtProvider jwtProvider;
 
-  public ProjectController(ProjectService projectService, ApplicationUserService applicationUserService, AmazonClientService amazonClientService, JwtProvider jwtProvider) {
+  public ProjectController(ProjectService projectService, ApplicationUserService applicationUserService, JwtProvider jwtProvider) {
     this.projectService = projectService;
     this.applicationUserService = applicationUserService;
-    this.amazonClientService = amazonClientService;
     this.jwtProvider = jwtProvider;
   }
 
@@ -41,7 +39,7 @@ public class ProjectController {
                             @RequestPart("file") MultipartFile file) {
     try {
       Project addedProject = projectService.addProject(project);
-      URL url = amazonClientService.uploadNewProjectPreviewFile(file);
+      URL url = saveProjectPreview(file, description);
       ApplicationUser account = applicationUserService.loadAccountByUsername(jwtProvider.getUsername(token));
       addedProject.setApplicationUser(account);
       addedProject.setMedia(url.toString());
@@ -61,8 +59,8 @@ public class ProjectController {
     try {
       checkIfProjectIdMatches(token, projectId);
       Project updatedProject = projectService.loadProjectById(projectId);
-      amazonClientService.deleteFileFromS3Bucket(updatedProject.getMedia());
-      URL url = amazonClientService.uploadNewProjectPreviewFile(file);
+      // TODO: 03.08.2020 add deletion of an old project preview
+      URL url = saveProjectPreview(file, description);
       updatedProject.setMedia(url.toString());
       updatedProject.setName(project.getName());
       updatedProject.setDescription(project.getDescription());
@@ -77,6 +75,11 @@ public class ProjectController {
                             @NotNull @PathVariable("projectId") Long projectId) {
     checkIfProjectIdMatches(token, projectId);
     projectService.deleteProjectById(projectId);
+  }
+
+  private URL saveProjectPreview(MultipartFile file, String description) throws MalformedURLException {
+    // TODO: 03.08.2020 save file to the remote storage and return URL
+    return new URL("");
   }
 
   private void checkIfProjectIdMatches(String token, Long id) {

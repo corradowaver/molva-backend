@@ -4,8 +4,6 @@ import com.molva.server.data.exceptions.profile.ProfileExceptions;
 import com.molva.server.data.model.ApplicationUser;
 import com.molva.server.data.model.Profile;
 import com.molva.server.data.repository.ProfileRepository;
-import com.molva.server.data.service.storage.AmazonClientService;
-import com.molva.server.data.service.storage.helpers.FileConverters;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
