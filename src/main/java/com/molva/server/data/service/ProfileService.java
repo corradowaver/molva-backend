@@ -15,13 +15,6 @@ import java.util.Optional;
 public class ProfileService {
   private final ProfileRepository profileRepository;
 
-  @Value("${aws.s3bucket.name}")
-  private String bucketName;
-  @Value("${aws.path-to-resources}")
-  private String pathToResources;
-  @Value("${aws.default-profile-photo}")
-  private String defaultProfilePhoto;
-
   @Autowired
   ProfileService(ProfileRepository profileRepository) {
     this.profileRepository = profileRepository;
@@ -49,9 +42,7 @@ public class ProfileService {
     if (profileWithProvidedApplicationUser.isPresent()) {
       throw new ProfileExceptions.ProfileExistsException();
     }
-    profile.setPhoto(bucketName
-        + pathToResources
-        + defaultProfilePhoto);
+    profile.setPhoto(""); // TODO: 03.08.2020 this path should be set to default profile photo url
     profile.setFirstname("");
     profile.setLastname("");
     profile.setApplicationUser(applicationUser);
