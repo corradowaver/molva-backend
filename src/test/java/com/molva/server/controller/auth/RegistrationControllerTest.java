@@ -75,4 +75,13 @@ class RegistrationControllerTest {
         .andExpect(jsonPath("$.email").value(user.getEmail()));
   }
 
+  @Test
+  @WithMockUser(roles = "ADMIN")
+  void registrationModeratorMustReturnBadRequestIfInvalidRequest() throws Exception {
+    mockMvc.perform(post("/admin/api/v1/registration/register/moderator")
+        .contentType(MediaType.APPLICATION_JSON)
+        .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isBadRequest());
+  }
+
 }
