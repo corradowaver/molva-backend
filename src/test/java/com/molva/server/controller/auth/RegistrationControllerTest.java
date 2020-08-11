@@ -54,7 +54,7 @@ class RegistrationControllerTest {
   @Test
   @WithMockUser(roles = "ADMIN")
   void registrationModeratorMustReturnOkIfValidRequest() throws Exception {
-    ApplicationUser user = factory.createRegisteredModerator();
+    ApplicationUser user = factory.createRegisteredModerator(4L);
     var jsonBody = new JSONObject(
         Map.of(
             "username", user.getUsername(),
