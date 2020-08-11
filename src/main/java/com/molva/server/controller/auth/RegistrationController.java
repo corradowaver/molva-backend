@@ -7,6 +7,7 @@ import com.molva.server.data.service.ProfileService;
 import com.molva.server.security.roles.ApplicationUserRole;
 import com.sun.istack.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,6 +27,7 @@ public class RegistrationController {
   }
 
   @PostMapping(path = "/register/moderator")
+  @PreAuthorize("hasRole('ADMIN')")
   public ApplicationUser registerModerator(@NotNull @RequestBody ApplicationUser applicationUser) {
     ApplicationUser account = applicationUserService.registerUser(applicationUser, ApplicationUserRole.MODERATOR);
     Profile profile = new Profile();
