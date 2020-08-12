@@ -1,8 +1,10 @@
 package com.molva.server.data.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
 import javax.persistence.*;
+import java.util.Set;
 
 @Entity
 @Table(name = "project")
@@ -20,21 +22,26 @@ class Project {
   @Column(name = "description")
   private String description;
 
-  @Column(name = "media")
-  private String media;
+  @OneToOne(mappedBy = "project",  cascade = CascadeType.REMOVE)
+  @JsonIgnore
+  private MediaFile preview;
+
+  @OneToMany(mappedBy = "projectFiles",  cascade = CascadeType.REMOVE)
+  @JsonIgnore
+  private Set<MediaFile> files;
 
   @ManyToOne
   @JoinColumn(name = "application_user_fk")
+  @JsonIgnore
   private ApplicationUser applicationUser;
 
   public Project() {
 
   }
 
-  public Project(String name, String description, String media) {
+  public Project(String name, String description) {
     this.name = name;
     this.description = description;
-    this.media = media;
   }
 
 }

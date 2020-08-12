@@ -5,7 +5,6 @@ import com.molva.server.data.model.ApplicationUser;
 import com.molva.server.data.model.Profile;
 import com.molva.server.data.repository.ProfileRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -45,7 +44,6 @@ public class ProfileService {
     profile.setPhoto(""); // TODO: 03.08.2020 this path should be set to default profile photo url
     profile.setFirstname("");
     profile.setLastname("");
-    profile.setApplicationUser(applicationUser);
     return profileRepository.save(profile);
   }
 

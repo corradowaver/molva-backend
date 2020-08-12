@@ -30,9 +30,9 @@ public class ApplicationUser implements UserDetails {
   @JsonProperty(access = WRITE_ONLY)
   private String password;
 
-  @OneToOne(cascade = CascadeType.REMOVE)
+  @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
   @JsonIgnore
-  @JoinColumn(name = "profile")
+  @JoinColumn(name = "profile_fk")
   private Profile profile;
 
   @Column(name = "granted_authorities")
@@ -104,6 +104,10 @@ public class ApplicationUser implements UserDetails {
 
   public void setProjects(Set<Project> projects) {
     this.projects = projects;
+  }
+
+  public void addProject(Project project) {
+    projects.add(project);
   }
 
   @Override

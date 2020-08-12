@@ -15,4 +15,12 @@ public class FileExceptions {
   @ResponseStatus(code = HttpStatus.BAD_REQUEST, reason = "File is invalid")
   public static class InvalidFileException extends RuntimeException {
   }
+
+  @ResponseStatus(code = HttpStatus.NOT_FOUND, reason = "File was not found")
+  public static class FileNotFoundException extends RuntimeException {
+  }
+
+  @ResponseStatus(code = HttpStatus.CONFLICT, reason = "File already exists")
+  public static class FileExistsException extends RuntimeException {
+  }
 }

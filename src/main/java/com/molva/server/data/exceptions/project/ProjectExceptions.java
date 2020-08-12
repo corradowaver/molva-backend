@@ -11,4 +11,12 @@ public class ProjectExceptions {
   @ResponseStatus(code = HttpStatus.CONFLICT, reason = "Project already exists")
   public static class ProjectExistsException extends RuntimeException {
   }
+
+  @ResponseStatus(code = HttpStatus.BAD_REQUEST, reason = "Invalid project name")
+  public static class ProjectInvalidNameException extends RuntimeException {
+  }
+
+  @ResponseStatus(code = HttpStatus.BAD_REQUEST, reason = "Invalid project description")
+  public static class ProjectInvalidDescriptionException extends RuntimeException {
+  }
 }

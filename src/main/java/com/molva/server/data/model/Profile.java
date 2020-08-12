@@ -23,8 +23,8 @@ class Profile {
   @Column(name = "photo")
   private String photo;
 
-  @OneToOne(cascade = CascadeType.ALL)
-  @JoinColumn(name = "application_user_fk", referencedColumnName = "id")
+  @OneToOne
+  @JoinColumn(name = "application_user_fk")
   private ApplicationUser applicationUser;
 
   public Profile() {
