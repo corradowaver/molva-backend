@@ -36,7 +36,8 @@ public class MediaFileService {
     Credentials credentials = GoogleCredentials.fromStream(
         new FileInputStream(PATH_TO_JSON_KEY)
     );
-    storage = StorageOptions.newBuilder().setCredentials(credentials).build().getService();
+//    storage = StorageOptions.newBuilder().setCredentials(credentials).build().getService();
+    storage = null;
   }
 
   public MediaFile loadMediaFileById(Long id) {

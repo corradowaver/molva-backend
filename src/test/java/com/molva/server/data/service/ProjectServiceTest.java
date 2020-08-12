@@ -1,13 +1,10 @@
 package com.molva.server.data.service;
 
-import com.amazonaws.services.opsworks.model.App;
 import com.molva.server.data.exceptions.project.ProjectExceptions;
 import com.molva.server.data.model.ApplicationUser;
-import com.molva.server.data.model.Profile;
 import com.molva.server.data.model.Project;
 import com.molva.server.data.repository.ProjectRepository;
 import com.molva.server.helpers.ApplicationUserFactory;
-import com.molva.server.helpers.ProfileFactory;
 import com.molva.server.helpers.ProjectFactory;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,7 +52,7 @@ class ProjectServiceTest {
 
   @Test
   void loadAllProjectsByApplicationUser() {
-    ApplicationUser user= userFactory.createApplicationUser();
+    ApplicationUser user = userFactory.createApplicationUser();
     List<Project> projects = projectFactory.createProjectsList();
     doReturn(Optional.of(projects)).when(repository).findAllByApplicationUser(any(ApplicationUser.class));
     List<Project> returnedProjects = service.loadAllProjectsByApplicationUser(user);
