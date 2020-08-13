@@ -9,6 +9,7 @@ import com.molva.server.data.service.MediaFileService;
 import com.molva.server.data.service.ProjectService;
 import com.molva.server.security.jwt.JwtProvider;
 import com.sun.istack.NotNull;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -27,6 +28,7 @@ public class ProjectController {
   private final MediaFileService mediaFileService;
   private final JwtProvider jwtProvider;
 
+  @Autowired
   public ProjectController(
       ProjectService projectService,
       ApplicationUserService applicationUserService,
