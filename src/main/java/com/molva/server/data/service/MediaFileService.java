@@ -21,23 +21,28 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Date;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 @Service
 public class MediaFileService {
   private final MediaFileRepository mediaFileRepository;
+
   @Value("${gcs.bucket.name}")
   private String bucketName;
-  String PATH_TO_JSON_KEY = "/usr/local/molva-285811-e8c348a24e2c.json";
+
   Storage storage;
 
+  static final String FILE_PATTERN = "file:";
+
   @Autowired
-  MediaFileService(MediaFileRepository mediaFileRepository) throws IOException {
+  MediaFileService(MediaFileRepository mediaFileRepository,
+                   @Value("${spring.cloud.gcp.credentials.location}") String rawCredentialsPath) throws IOException {
     this.mediaFileRepository = mediaFileRepository;
+    String credentialsPath = rawCredentialsPath.replaceFirst(Pattern.quote(FILE_PATTERN), "");
     Credentials credentials = GoogleCredentials.fromStream(
-        new FileInputStream(PATH_TO_JSON_KEY)
+        new FileInputStream(credentialsPath)
     );
-//    storage = StorageOptions.newBuilder().setCredentials(credentials).build().getService();
-    storage = null;
+    storage = StorageOptions.newBuilder().setCredentials(credentials).build().getService();
   }
 
   public MediaFile loadMediaFileById(Long id) {
