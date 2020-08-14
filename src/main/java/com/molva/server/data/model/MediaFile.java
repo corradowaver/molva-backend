@@ -24,7 +24,7 @@ class MediaFile {
   @ManyToOne()
   @JsonIgnore
   @EqualsAndHashCode.Exclude
-  private Project projectFiles;
+  private Project filesProject;
 
   @Column(name = "created", nullable = false)
   @Temporal(TemporalType.DATE)

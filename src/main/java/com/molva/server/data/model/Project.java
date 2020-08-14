@@ -22,11 +22,11 @@ class Project {
   @Column(name = "description")
   private String description;
 
-  @OneToOne(mappedBy = "project",  cascade = CascadeType.REMOVE)
+  @OneToOne(mappedBy = "project")
   @JsonIgnore
   private MediaFile preview;
 
-  @OneToMany(mappedBy = "projectFiles",  cascade = CascadeType.REMOVE)
+  @OneToMany(mappedBy = "filesProject", cascade = CascadeType.REMOVE)
   @JsonIgnore
   private Set<MediaFile> files;
 

@@ -89,8 +89,8 @@ public class MediaFileService {
   }
 
   public void deleteMediaFileById(Long id) {
-    MediaFile mediaFile = loadMediaFileById(id);
-    storage.delete(BlobId.of(bucketName, mediaFile.getPath()));
+    String path = loadMediaFileById(id).getPath();
+    storage.delete(BlobId.of(bucketName, path));
     mediaFileRepository.deleteById(id);
   }
 

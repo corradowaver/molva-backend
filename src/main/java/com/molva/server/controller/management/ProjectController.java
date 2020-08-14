@@ -45,7 +45,7 @@ public class ProjectController {
   @PreAuthorize("hasAuthority('moderator:write')")
   public Project addProject(@RequestHeader("Authorization") String token,
                             Project project,
-                            @RequestParam("preview") MultipartFile preview) {
+                            @RequestParam("preview-multipart") MultipartFile preview) {
     validateProjectData(project, preview, null);
     ApplicationUser applicationUser = applicationUserService.loadAccountByUsername(
         jwtProvider.getUsername(jwtProvider.resolveToken(token))
@@ -67,8 +67,8 @@ public class ProjectController {
   public Project updateProject(@NotNull @PathVariable("projectId") Long projectId,
                                @RequestHeader("Authorization") String token,
                                Project projectData,
-                               @RequestParam("preview") MultipartFile preview,
-                               @RequestParam("files") MultipartFile[] files) {
+                               @RequestParam("preview-multipart") MultipartFile preview,
+                               @RequestParam("files-multipart") MultipartFile[] files) {
     throwAnExceptionIfProjectIdNotMatchesUserProjects(token, projectId);
     validateProjectData(projectData, preview, files);
     Project project = projectService.loadProjectById(projectId);
@@ -95,7 +95,7 @@ public class ProjectController {
     newPreview.setProject(project);
     mediaFileService.updateMediaFileById(newPreview.getId(), newPreview);
     newFiles.forEach(file -> {
-      file.setProject(project);
+      file.setFilesProject(project);
       mediaFileService.updateMediaFileById(file.getId(), file);
     });
     return project;
@@ -119,10 +119,14 @@ public class ProjectController {
                             @NotNull @PathVariable("projectId") Long projectId) {
     throwAnExceptionIfProjectIdNotMatchesUserProjects(token, projectId);
     Project project = projectService.loadProjectById(projectId);
-    mediaFileService.deleteMediaFileById(project.getPreview().getId());
-    project.getFiles().forEach(file -> {
-      mediaFileService.deleteMediaFileById(file.getId());
-    });
+    if (project.getPreview() != null) {
+      mediaFileService.deleteMediaFileById(project.getPreview().getId());
+    }
+    if (project.getFiles() != null) {
+      project.getFiles().forEach(file -> {
+        mediaFileService.deleteMediaFileById(file.getId());
+      });
+    }
     projectService.deleteProjectById(projectId);
   }
 
