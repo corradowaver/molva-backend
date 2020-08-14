@@ -8,9 +8,9 @@ import javax.persistence.*;
 import java.util.Date;
 
 @Entity
-@Table(name = "media_file")
+@Table(name = "project_preview")
 public @Data
-class MediaFile {
+class ProjectPreview {
   @Id
   @GeneratedValue(strategy = GenerationType.AUTO)
   @Column(name = "id", unique = true, nullable = false)
@@ -20,11 +20,6 @@ class MediaFile {
   @JsonIgnore
   @EqualsAndHashCode.Exclude
   private Project project;
-
-  @ManyToOne()
-  @JsonIgnore
-  @EqualsAndHashCode.Exclude
-  private Project filesProject;
 
   @Column(name = "created", nullable = false)
   @Temporal(TemporalType.DATE)
@@ -42,6 +37,14 @@ class MediaFile {
   @Column(name = "size", nullable = false)
   private long size;
 
-  public MediaFile() {
+  public ProjectPreview() {
+  }
+
+  public ProjectPreview(Date created, Date updated, String md5, String mime, long size) {
+    this.created = created;
+    this.updated = updated;
+    this.md5 = md5;
+    this.mime = mime;
+    this.size = size;
   }
 }

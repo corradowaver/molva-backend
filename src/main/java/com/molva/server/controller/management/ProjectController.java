@@ -2,11 +2,14 @@ package com.molva.server.controller.management;
 
 import com.molva.server.data.exceptions.profile.ProfileExceptions;
 import com.molva.server.data.model.ApplicationUser;
-import com.molva.server.data.model.MediaFile;
 import com.molva.server.data.model.Project;
+import com.molva.server.data.model.ProjectFile;
+import com.molva.server.data.model.ProjectPreview;
 import com.molva.server.data.service.ApplicationUserService;
 import com.molva.server.data.service.MediaFileService;
 import com.molva.server.data.service.ProjectService;
+import com.molva.server.data.service.helpers.FileValidators;
+import com.molva.server.data.service.helpers.ProjectValidators;
 import com.molva.server.security.jwt.JwtProvider;
 import com.sun.istack.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,11 +57,11 @@ public class ProjectController {
     Project savedProject = projectService.addProject(project);
     applicationUser.addProject(savedProject);
     applicationUserService.updateApplicationUserById(applicationUser.getId(), applicationUser);
-    MediaFile mediaFile = mediaFileService.addMediaFile(preview);
+    ProjectPreview mediaFile = mediaFileService.addProjectPreview(preview);
     savedProject.setPreview(mediaFile);
     projectService.updateProjectById(savedProject.getId(), savedProject);
     mediaFile.setProject(savedProject);
-    mediaFileService.updateMediaFileById(mediaFile.getId(), mediaFile);
+    mediaFileService.updateProjectPreviewById(mediaFile.getId(), mediaFile);
     return savedProject;
   }
 
@@ -74,29 +77,29 @@ public class ProjectController {
     Project project = projectService.loadProjectById(projectId);
     project.setName(projectData.getName());
     project.setDescription(projectData.getDescription());
-    MediaFile oldPreview = project.getPreview();
+    ProjectPreview oldPreview = project.getPreview();
     if (oldPreview != null) {
-      mediaFileService.deleteMediaFileById(oldPreview.getId());
+      mediaFileService.deleteProjectPreviewById(oldPreview.getId());
     }
-    Set<MediaFile> oldFiles = project.getFiles();
+    Set<ProjectFile> oldFiles = project.getFiles();
     if (oldFiles != null) {
       oldFiles.forEach(oldFile -> {
-        mediaFileService.deleteMediaFileById(oldFile.getId());
+        mediaFileService.deleteProjectFileById(oldFile.getId());
       });
     }
-    MediaFile newPreview = mediaFileService.addMediaFile(preview);
+    ProjectPreview newPreview = mediaFileService.addProjectPreview(preview);
     project.setPreview(newPreview);
-    Set<MediaFile> newFiles = Arrays.stream(files)
+    Set<ProjectFile> newFiles = Arrays.stream(files)
         .filter(Objects::nonNull)
-        .map(mediaFileService::addMediaFile)
+        .map(mediaFileService::addProjectFile)
         .collect(Collectors.toSet());
     project.setFiles(newFiles);
     projectService.updateProjectById(projectId, project);
     newPreview.setProject(project);
-    mediaFileService.updateMediaFileById(newPreview.getId(), newPreview);
+    mediaFileService.updateProjectPreviewById(newPreview.getId(), newPreview);
     newFiles.forEach(file -> {
-      file.setFilesProject(project);
-      mediaFileService.updateMediaFileById(file.getId(), file);
+      file.setProject(project);
+      mediaFileService.updateProjectFileById(file.getId(), file);
     });
     return project;
   }
@@ -106,11 +109,11 @@ public class ProjectController {
       MultipartFile preview,
       MultipartFile[] files
   ) {
-    projectService.validateProjectName(projectData.getName());
-    projectService.validateProjectDescription(projectData.getDescription());
-    mediaFileService.validateMediaFile(preview);
+    ProjectValidators.validateProjectName(projectData.getName());
+    ProjectValidators.validateProjectDescription(projectData.getDescription());
+    FileValidators.validateMediaFile(preview);
     if (files != null) {
-      Arrays.stream(files).forEach(mediaFileService::validateMediaFile);
+      Arrays.stream(files).forEach(FileValidators::validateMediaFile);
     }
   }
 
@@ -120,11 +123,11 @@ public class ProjectController {
     throwAnExceptionIfProjectIdNotMatchesUserProjects(token, projectId);
     Project project = projectService.loadProjectById(projectId);
     if (project.getPreview() != null) {
-      mediaFileService.deleteMediaFileById(project.getPreview().getId());
+      mediaFileService.deleteProjectPreviewById(project.getPreview().getId());
     }
     if (project.getFiles() != null) {
       project.getFiles().forEach(file -> {
-        mediaFileService.deleteMediaFileById(file.getId());
+        mediaFileService.deleteProjectFileById(file.getId());
       });
     }
     projectService.deleteProjectById(projectId);

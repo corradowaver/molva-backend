@@ -1,5 +1,7 @@
 package com.molva.server.controller.management;
 
+import com.molva.server.data.model.ProjectFile;
+import com.molva.server.data.model.ProjectPreview;
 import com.molva.server.data.service.MediaFileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -18,10 +20,17 @@ public class MediaFileController {
     this.mediaFileService = mediaFileService;
   }
 
-  @GetMapping(path = "/get", produces = {MediaType.IMAGE_PNG_VALUE, MediaType.IMAGE_JPEG_VALUE})
-  public byte[] getMediaFileByteById(
+  @GetMapping(path = "/get/preview", produces = {MediaType.IMAGE_PNG_VALUE, MediaType.IMAGE_JPEG_VALUE})
+  public byte[] getProjectPreviewBytesById(
       @RequestHeader("id") Long id
   ) {
-    return mediaFileService.loadMediaFileBytesById(id);
+    return mediaFileService.loadProjectPreviewBytesById(id);
+  }
+
+  @GetMapping(path = "/get/file", produces = {MediaType.IMAGE_PNG_VALUE, MediaType.IMAGE_JPEG_VALUE})
+  public byte[] getProjectFileBytesById(
+      @RequestHeader("id") Long id
+  ) {
+    return mediaFileService.loadProjectFileBytesById(id);
   }
 }

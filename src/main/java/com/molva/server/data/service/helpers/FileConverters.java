@@ -1,4 +1,4 @@
-package com.molva.server.data.service.storage.helpers;
+package com.molva.server.data.service.helpers;
 
 import com.molva.server.data.exceptions.file.FileExceptions;
 import org.springframework.web.multipart.MultipartFile;

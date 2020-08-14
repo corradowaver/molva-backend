@@ -4,9 +4,12 @@ import com.google.auth.Credentials;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.storage.*;
 import com.molva.server.data.exceptions.file.FileExceptions;
-import com.molva.server.data.model.MediaFile;
-import com.molva.server.data.repository.MediaFileRepository;
-import com.molva.server.data.service.storage.helpers.FileConverters;
+import com.molva.server.data.model.ProjectFile;
+import com.molva.server.data.model.ProjectPreview;
+import com.molva.server.data.repository.ProjectFileRepository;
+import com.molva.server.data.repository.ProjectPreviewRepository;
+import com.molva.server.data.service.helpers.FileConverters;
+import com.molva.server.data.service.helpers.FileValidators;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,7 +28,8 @@ import java.util.regex.Pattern;
 
 @Service
 public class MediaFileService {
-  private final MediaFileRepository mediaFileRepository;
+  private final ProjectPreviewRepository projectPreviewRepository;
+  private final ProjectFileRepository projectFileRepository;
 
   @Value("${gcs.bucket.name}")
   private String bucketName;
@@ -35,9 +39,11 @@ public class MediaFileService {
   static final String FILE_PATTERN = "file:";
 
   @Autowired
-  MediaFileService(MediaFileRepository mediaFileRepository,
+  MediaFileService(ProjectPreviewRepository projectPreviewRepository,
+                   ProjectFileRepository projectFileRepository,
                    @Value("${spring.cloud.gcp.credentials.location}") String rawCredentialsPath) throws IOException {
-    this.mediaFileRepository = mediaFileRepository;
+    this.projectPreviewRepository = projectPreviewRepository;
+    this.projectFileRepository = projectFileRepository;
     String credentialsPath = rawCredentialsPath.replaceFirst(Pattern.quote(FILE_PATTERN), "");
     Credentials credentials = GoogleCredentials.fromStream(
         new FileInputStream(credentialsPath)
@@ -45,60 +51,146 @@ public class MediaFileService {
     storage = StorageOptions.newBuilder().setCredentials(credentials).build().getService();
   }
 
-  public MediaFile loadMediaFileById(Long id) {
-    return mediaFileRepository
+  public ProjectPreview loadProjectPreviewById(Long id) {
+    return projectPreviewRepository
         .findById(id)
         .orElseThrow(FileExceptions.FileNotFoundException::new);
   }
 
-  public byte[] loadMediaFileBytesById(Long id) {
-    return getMediaFileBytes(loadMediaFileById(id).getPath());
+  public ProjectFile loadProjectFileById(Long id) {
+    return projectFileRepository
+        .findById(id)
+        .orElseThrow(FileExceptions.FileNotFoundException::new);
   }
 
-  public MediaFile addMediaFile(MultipartFile multipartFile) {
+  public byte[] loadProjectPreviewBytesById(Long id) {
+    return getMediaFileBytes(loadProjectPreviewById(id).getPath());
+  }
+
+  public byte[] loadProjectFileBytesById(Long id) {
+    return getMediaFileBytes(loadProjectFileById(id).getPath());
+  }
+
+  public ProjectFile addProjectFile(MultipartFile multipartFile) {
     if (multipartFile == null) return null;
-    File file = FileConverters.convertMultiPartToFile(multipartFile);
-    try (InputStream is = new FileInputStream(file)) {
-      BasicFileAttributes basicFileAttributes = Files.readAttributes(
-          Paths.get(file.getAbsolutePath()), BasicFileAttributes.class
-      );
-      FileNameMap fileNameMap = URLConnection.getFileNameMap();
-      String mimeType = fileNameMap.getContentTypeFor(file.getName());
-      MediaFile mediaFile = new MediaFile();
-      mediaFile.setCreated(new Date(basicFileAttributes.creationTime().toMillis()));
-      mediaFile.setUpdated(new Date(basicFileAttributes.lastModifiedTime().toMillis()));
-      mediaFile.setMd5(DigestUtils.md5Hex(is));
-      mediaFile.setSize(basicFileAttributes.size());
-      mediaFile.setMime(mimeType);
-      mediaFile = mediaFileRepository.save(mediaFile);
-      String resultFilename = getFilePath(mediaFile.getId()) + "."
-          + getExtensionByFilename(file.getName()).orElseThrow(FileExceptions.InvalidFileException::new);
-      mediaFile.setPath(resultFilename);
-      storage.create(
-          BlobInfo
-              .newBuilder(bucketName, resultFilename)
-              .build(),
-          Files.readAllBytes(file.toPath())
-      );
-      file.delete();
-      return mediaFileRepository.save(mediaFile);
-    } catch (IOException e) {
-      file.delete();
+    File convertedFile = FileConverters.convertMultiPartToFile(multipartFile);
+    ProjectFile savedFile = saveProjectFile(convertedFile);
+    try {
+      saveFileToStorage(convertedFile, savedFile.getPath());
+      return savedFile;
+    } catch (IOException ex) {
+      deleteProjectPreviewById(savedFile.getId());
       throw new FileExceptions.InvalidFileException();
     }
   }
 
-  public void deleteMediaFileById(Long id) {
-    String path = loadMediaFileById(id).getPath();
-    storage.delete(BlobId.of(bucketName, path));
-    mediaFileRepository.deleteById(id);
+  public ProjectPreview addProjectPreview(MultipartFile multipartFile) {
+    if (multipartFile == null) return null;
+    File convertedFile = FileConverters.convertMultiPartToFile(multipartFile);
+    ProjectPreview savedPreview = saveProjectPreview(convertedFile);
+    try {
+      saveFileToStorage(convertedFile, savedPreview.getPath());
+      convertedFile.delete();
+      return savedPreview;
+    } catch (IOException ex) {
+      deleteProjectPreviewById(savedPreview.getId());
+      convertedFile.delete();
+      throw new FileExceptions.InvalidFileException();
+    }
   }
 
-  public MediaFile updateMediaFileById(Long id, MediaFile mediaFile) {
-    Optional<MediaFile> mediaFileOptional = mediaFileRepository.findById(id);
+  public ProjectFile saveProjectFile(File convertedFile) {
+    try (InputStream is = new FileInputStream(convertedFile)) {
+      BasicFileAttributes basicFileAttributes = Files.readAttributes(
+          Paths.get(convertedFile.getAbsolutePath()), BasicFileAttributes.class
+      );
+      FileNameMap fileNameMap = URLConnection.getFileNameMap();
+      String mimeType = fileNameMap.getContentTypeFor(convertedFile.getName());
+      ProjectFile mediaFile = new ProjectFile(
+          new Date(basicFileAttributes.creationTime().toMillis()),
+          new Date(basicFileAttributes.lastModifiedTime().toMillis()),
+          DigestUtils.md5Hex(is),
+          mimeType,
+          basicFileAttributes.size()
+      );
+      mediaFile = projectFileRepository.save(mediaFile);
+      String filename = getFilePath(mediaFile.getId()) + "."
+          + FileValidators.getExtensionByFilename
+          (
+              convertedFile.getName()
+          ).orElseThrow(FileExceptions.InvalidFileException::new);
+      mediaFile.setPath(filename);
+      return projectFileRepository.save(mediaFile);
+    } catch (IOException e) {
+      convertedFile.delete();
+      throw new FileExceptions.InvalidFileException();
+    }
+  }
+
+  public ProjectPreview saveProjectPreview(File convertedFile) {
+    try (InputStream is = new FileInputStream(convertedFile)) {
+      BasicFileAttributes basicFileAttributes = Files.readAttributes(
+          Paths.get(convertedFile.getAbsolutePath()), BasicFileAttributes.class
+      );
+      FileNameMap fileNameMap = URLConnection.getFileNameMap();
+      String mimeType = fileNameMap.getContentTypeFor(convertedFile.getName());
+      ProjectPreview mediaFile = new ProjectPreview(
+          new Date(basicFileAttributes.creationTime().toMillis()),
+          new Date(basicFileAttributes.lastModifiedTime().toMillis()),
+          DigestUtils.md5Hex(is),
+          mimeType,
+          basicFileAttributes.size()
+      );
+      mediaFile = projectPreviewRepository.save(mediaFile);
+      String filename = getFilePath(mediaFile.getId()) + "."
+          + FileValidators.getExtensionByFilename
+          (
+              convertedFile.getName()
+          ).orElseThrow(FileExceptions.InvalidFileException::new);
+      mediaFile.setPath(filename);
+      return projectPreviewRepository.save(mediaFile);
+    } catch (IOException e) {
+      convertedFile.delete();
+      throw new FileExceptions.InvalidFileException();
+    }
+  }
+
+  public void saveFileToStorage(File convertedFile, String filename) throws IOException {
+    storage.create(
+        BlobInfo
+            .newBuilder(bucketName, filename)
+            .build(),
+        Files.readAllBytes(convertedFile.toPath())
+    );
+  }
+
+  public void deleteProjectPreviewById(Long id) {
+    String path = loadProjectPreviewById(id).getPath();
+    storage.delete(BlobId.of(bucketName, path));
+    projectPreviewRepository.deleteById(id);
+  }
+
+  public void deleteProjectFileById(Long id) {
+    String path = loadProjectFileById(id).getPath();
+    storage.delete(BlobId.of(bucketName, path));
+    projectFileRepository.deleteById(id);
+  }
+
+  public ProjectPreview updateProjectPreviewById(Long id, ProjectPreview projectPreview) {
+    Optional<ProjectPreview> mediaFileOptional = projectPreviewRepository.findById(id);
     if (mediaFileOptional.isPresent()) {
-      mediaFile.setId(mediaFileOptional.get().getId());
-      return mediaFileRepository.save(mediaFile);
+      projectPreview.setId(mediaFileOptional.get().getId());
+      return projectPreviewRepository.save(projectPreview);
+    } else {
+      throw new FileExceptions.FileNotFoundException();
+    }
+  }
+
+  public ProjectFile updateProjectFileById(Long id, ProjectFile projectFile) {
+    Optional<ProjectFile> mediaFileOptional = projectFileRepository.findById(id);
+    if (mediaFileOptional.isPresent()) {
+      projectFile.setId(mediaFileOptional.get().getId());
+      return projectFileRepository.save(projectFile);
     } else {
       throw new FileExceptions.FileNotFoundException();
     }
@@ -107,46 +199,6 @@ public class MediaFileService {
   public byte[] getMediaFileBytes(String path) {
     Blob blob = storage.get(bucketName, path);
     return blob.getContent();
-  }
-
-  public void validateMediaFile(MultipartFile file) {
-    if (file == null) return;
-    Optional<String> extension = getExtensionByFilename(file.getOriginalFilename());
-    if (extension.isPresent()) {
-      if (extension.get().equals("jpg") || extension.get().equals("png")) {
-        validateImage(file);
-      } else if (extension.get().equals("mp4")) {
-        validateVideo(file);
-      }
-      return;
-    }
-    throw new FileExceptions.InvalidExtensionException();
-  }
-
-  public void validateImage(MultipartFile file) {
-    Optional<String> extension = getExtensionByFilename(file.getOriginalFilename());
-    if (extension.isEmpty() || !extension.get().equals("jpg") && !extension.get().equals("png")) {
-      throw new FileExceptions.InvalidExtensionException();
-    }
-    if (getFileSizeMegaBytes(file) > 10) {
-      throw new FileExceptions.TooLargeFileException();
-    }
-  }
-
-  public void validateVideo(MultipartFile file) {
-    if (getFileSizeMegaBytes(file) > 2000) {
-      throw new FileExceptions.TooLargeFileException();
-    }
-  }
-
-  private static long getFileSizeMegaBytes(MultipartFile file) {
-    return file.getSize() / (1024 * 1024);
-  }
-
-  public static Optional<String> getExtensionByFilename(String filename) {
-    return Optional.ofNullable(filename)
-        .filter(f -> f.contains("."))
-        .map(f -> f.substring(filename.lastIndexOf(".") + 1));
   }
 
   private String getFilePath(long projectId) throws IOException {

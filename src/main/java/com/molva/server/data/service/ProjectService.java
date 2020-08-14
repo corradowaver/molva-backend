@@ -38,30 +38,6 @@ public class ProjectService {
         .orElseThrow(ProjectExceptions.ProjectNotFoundException::new);
   }
 
-
-//  public String deleteProjectPreviewFromStorage(String filename) {
-//    storage.delete(BlobId.of(bucketName, "project_previews/" +
-//        filename));
-//    return "Success";
-//  }
-//
-//  public byte[] getProjectPreview(String filename) {
-//    Blob blob = storage.get(bucketName, "project_previews/" + filename);
-//    return blob.getContent();
-//  }
-
-  public void validateProjectName(String name) {
-    if (name.length() >= 66 || name.length() < 3) {
-      throw new ProjectExceptions.ProjectInvalidNameException();
-    }
-  }
-
-  public void validateProjectDescription(String description) {
-    if (description.split(" ").length > 2000 || description.length() > 15000) {
-      throw new ProjectExceptions.ProjectInvalidDescriptionException();
-    }
-  }
-
   public Project addProject(Project project) {
     Optional<Project> projectWithTheSameName =
         projectRepository.findProjectByName(project.getName());
