@@ -55,4 +55,13 @@ class MediaFile {
     this.mime = mime;
     this.size = size;
   }
+
+  public MediaFile(Long id, Date created, Date updated, String md5, String mime, long size) {
+    this.id = id;
+    this.created = created;
+    this.updated = updated;
+    this.md5 = md5;
+    this.mime = mime;
+    this.size = size;
+  }
 }

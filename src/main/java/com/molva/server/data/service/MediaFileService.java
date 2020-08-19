@@ -64,9 +64,11 @@ public class MediaFileService {
     MediaFile savedFile = saveMediaFile(convertedFile);
     try {
       saveFileToStorage(convertedFile, savedFile.getPath());
+      convertedFile.delete();
       return savedFile;
     } catch (IOException ex) {
       deleteMediaFileById(savedFile.getId());
+      convertedFile.delete();
       throw new FileExceptions.InvalidFileException();
     }
   }
