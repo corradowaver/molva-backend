@@ -1,9 +1,10 @@
 package com.molva.server.data.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+import lombok.ToString;
 
 import javax.persistence.*;
-import java.util.Set;
 
 @Entity
 @Table(name = "profile")
@@ -20,8 +21,10 @@ class Profile {
   @Column(name = "lastname")
   private String lastname;
 
-  @Column(name = "photo")
-  private String photo;
+  @OneToOne(mappedBy = "photoOwner")
+  @JsonIgnore
+  @ToString.Exclude
+  private MediaFile photo;
 
   @OneToOne
   @JoinColumn(name = "application_user_fk")
@@ -30,10 +33,9 @@ class Profile {
   public Profile() {
   }
 
-  public Profile(String firstname, String lastname, String photo) {
+  public Profile(String firstname, String lastname) {
     this.firstname = firstname;
     this.lastname = lastname;
-    this.photo = photo;
   }
 
 }
