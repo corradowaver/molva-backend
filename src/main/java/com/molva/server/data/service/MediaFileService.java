@@ -4,10 +4,8 @@ import com.google.auth.Credentials;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.storage.*;
 import com.molva.server.data.exceptions.file.FileExceptions;
-import com.molva.server.data.model.ProjectFile;
-import com.molva.server.data.model.ProjectPreview;
-import com.molva.server.data.repository.ProjectFileRepository;
-import com.molva.server.data.repository.ProjectPreviewRepository;
+import com.molva.server.data.model.MediaFile;
+import com.molva.server.data.repository.MediaFileRepository;
 import com.molva.server.data.service.helpers.FileConverters;
 import com.molva.server.data.service.helpers.FileValidators;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -28,8 +26,7 @@ import java.util.regex.Pattern;
 
 @Service
 public class MediaFileService {
-  private final ProjectPreviewRepository projectPreviewRepository;
-  private final ProjectFileRepository projectFileRepository;
+  private final MediaFileRepository mediaFileRepository;
 
   @Value("${gcs.bucket.name}")
   private String bucketName;
@@ -39,11 +36,11 @@ public class MediaFileService {
   static final String FILE_PATTERN = "file:";
 
   @Autowired
-  MediaFileService(ProjectPreviewRepository projectPreviewRepository,
-                   ProjectFileRepository projectFileRepository,
-                   @Value("${spring.cloud.gcp.credentials.location}") String rawCredentialsPath) throws IOException {
-    this.projectPreviewRepository = projectPreviewRepository;
-    this.projectFileRepository = projectFileRepository;
+  MediaFileService(
+      MediaFileRepository mediaFileRepository,
+      @Value("${spring.cloud.gcp.credentials.location}") String rawCredentialsPath
+  ) throws IOException {
+    this.mediaFileRepository = mediaFileRepository;
     String credentialsPath = rawCredentialsPath.replaceFirst(Pattern.quote(FILE_PATTERN), "");
     Credentials credentials = GoogleCredentials.fromStream(
         new FileInputStream(credentialsPath)
@@ -51,104 +48,51 @@ public class MediaFileService {
     storage = StorageOptions.newBuilder().setCredentials(credentials).build().getService();
   }
 
-  public ProjectPreview loadProjectPreviewById(Long id) {
-    return projectPreviewRepository
+  public MediaFile loadMediaFileById(Long id) {
+    return mediaFileRepository
         .findById(id)
         .orElseThrow(FileExceptions.FileNotFoundException::new);
   }
 
-  public ProjectFile loadProjectFileById(Long id) {
-    return projectFileRepository
-        .findById(id)
-        .orElseThrow(FileExceptions.FileNotFoundException::new);
+  public byte[] loadMediaFileBytesById(Long id) {
+    return getMediaFileBytes(loadMediaFileById(id).getPath());
   }
 
-  public byte[] loadProjectPreviewBytesById(Long id) {
-    return getMediaFileBytes(loadProjectPreviewById(id).getPath());
-  }
-
-  public byte[] loadProjectFileBytesById(Long id) {
-    return getMediaFileBytes(loadProjectFileById(id).getPath());
-  }
-
-  public ProjectFile addProjectFile(MultipartFile multipartFile) {
+  public MediaFile addMediaFile(MultipartFile multipartFile) {
     if (multipartFile == null) return null;
     File convertedFile = FileConverters.convertMultiPartToFile(multipartFile);
-    ProjectFile savedFile = saveProjectFile(convertedFile);
+    MediaFile savedFile = saveMediaFile(convertedFile);
     try {
       saveFileToStorage(convertedFile, savedFile.getPath());
       return savedFile;
     } catch (IOException ex) {
-      deleteProjectPreviewById(savedFile.getId());
+      deleteMediaFileById(savedFile.getId());
       throw new FileExceptions.InvalidFileException();
     }
   }
 
-  public ProjectPreview addProjectPreview(MultipartFile multipartFile) {
-    if (multipartFile == null) return null;
-    File convertedFile = FileConverters.convertMultiPartToFile(multipartFile);
-    ProjectPreview savedPreview = saveProjectPreview(convertedFile);
-    try {
-      saveFileToStorage(convertedFile, savedPreview.getPath());
-      convertedFile.delete();
-      return savedPreview;
-    } catch (IOException ex) {
-      deleteProjectPreviewById(savedPreview.getId());
-      convertedFile.delete();
-      throw new FileExceptions.InvalidFileException();
-    }
-  }
-
-  public ProjectFile saveProjectFile(File convertedFile) {
+  public MediaFile saveMediaFile(File convertedFile) {
     try (InputStream is = new FileInputStream(convertedFile)) {
       BasicFileAttributes basicFileAttributes = Files.readAttributes(
           Paths.get(convertedFile.getAbsolutePath()), BasicFileAttributes.class
       );
       FileNameMap fileNameMap = URLConnection.getFileNameMap();
       String mimeType = fileNameMap.getContentTypeFor(convertedFile.getName());
-      ProjectFile mediaFile = new ProjectFile(
+      MediaFile mediaFile = new MediaFile(
           new Date(basicFileAttributes.creationTime().toMillis()),
           new Date(basicFileAttributes.lastModifiedTime().toMillis()),
           DigestUtils.md5Hex(is),
           mimeType,
           basicFileAttributes.size()
       );
-      mediaFile = projectFileRepository.save(mediaFile);
+      mediaFile = mediaFileRepository.save(mediaFile);
       String filename = getFilePath(mediaFile.getId()) + "."
           + FileValidators.getExtensionByFilename
           (
               convertedFile.getName()
           ).orElseThrow(FileExceptions.InvalidFileException::new);
       mediaFile.setPath(filename);
-      return projectFileRepository.save(mediaFile);
-    } catch (IOException e) {
-      convertedFile.delete();
-      throw new FileExceptions.InvalidFileException();
-    }
-  }
-
-  public ProjectPreview saveProjectPreview(File convertedFile) {
-    try (InputStream is = new FileInputStream(convertedFile)) {
-      BasicFileAttributes basicFileAttributes = Files.readAttributes(
-          Paths.get(convertedFile.getAbsolutePath()), BasicFileAttributes.class
-      );
-      FileNameMap fileNameMap = URLConnection.getFileNameMap();
-      String mimeType = fileNameMap.getContentTypeFor(convertedFile.getName());
-      ProjectPreview mediaFile = new ProjectPreview(
-          new Date(basicFileAttributes.creationTime().toMillis()),
-          new Date(basicFileAttributes.lastModifiedTime().toMillis()),
-          DigestUtils.md5Hex(is),
-          mimeType,
-          basicFileAttributes.size()
-      );
-      mediaFile = projectPreviewRepository.save(mediaFile);
-      String filename = getFilePath(mediaFile.getId()) + "."
-          + FileValidators.getExtensionByFilename
-          (
-              convertedFile.getName()
-          ).orElseThrow(FileExceptions.InvalidFileException::new);
-      mediaFile.setPath(filename);
-      return projectPreviewRepository.save(mediaFile);
+      return mediaFileRepository.save(mediaFile);
     } catch (IOException e) {
       convertedFile.delete();
       throw new FileExceptions.InvalidFileException();
@@ -164,33 +108,17 @@ public class MediaFileService {
     );
   }
 
-  public void deleteProjectPreviewById(Long id) {
-    String path = loadProjectPreviewById(id).getPath();
+  public void deleteMediaFileById(Long id) {
+    String path = loadMediaFileById(id).getPath();
     storage.delete(BlobId.of(bucketName, path));
-    projectPreviewRepository.deleteById(id);
+    mediaFileRepository.deleteById(id);
   }
 
-  public void deleteProjectFileById(Long id) {
-    String path = loadProjectFileById(id).getPath();
-    storage.delete(BlobId.of(bucketName, path));
-    projectFileRepository.deleteById(id);
-  }
-
-  public ProjectPreview updateProjectPreviewById(Long id, ProjectPreview projectPreview) {
-    Optional<ProjectPreview> mediaFileOptional = projectPreviewRepository.findById(id);
-    if (mediaFileOptional.isPresent()) {
-      projectPreview.setId(mediaFileOptional.get().getId());
-      return projectPreviewRepository.save(projectPreview);
-    } else {
-      throw new FileExceptions.FileNotFoundException();
-    }
-  }
-
-  public ProjectFile updateProjectFileById(Long id, ProjectFile projectFile) {
-    Optional<ProjectFile> mediaFileOptional = projectFileRepository.findById(id);
+  public MediaFile updateMediaFileById(Long id, MediaFile projectFile) {
+    Optional<MediaFile> mediaFileOptional = mediaFileRepository.findById(id);
     if (mediaFileOptional.isPresent()) {
       projectFile.setId(mediaFileOptional.get().getId());
-      return projectFileRepository.save(projectFile);
+      return mediaFileRepository.save(projectFile);
     } else {
       throw new FileExceptions.FileNotFoundException();
     }

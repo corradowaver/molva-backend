@@ -22,13 +22,13 @@ class Project {
   @Column(name = "description")
   private String description;
 
-  @OneToOne(mappedBy = "project")
+  @OneToOne(mappedBy = "previewOwner")
   @JsonIgnore
-  private ProjectPreview preview;
+  private MediaFile preview;
 
-  @OneToMany(mappedBy = "project")
+  @OneToMany(mappedBy = "fileOwner")
   @JsonIgnore
-  private Set<ProjectFile> files;
+  private Set<MediaFile> files;
 
   @ManyToOne
   @JoinColumn(name = "application_user_fk")
