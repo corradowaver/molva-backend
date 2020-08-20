@@ -72,6 +72,10 @@ public class ProfileService {
     }
   }
 
+  public Profile updateProfileById(Long id, Profile newProfile) {
+    return updateProfileById(id, newProfile, null);
+  }
+
   public void deleteProfileById(Long id) {
     Optional<Profile> profileOptional = profileRepository.findById(id);
     if (profileOptional.isPresent()) {
