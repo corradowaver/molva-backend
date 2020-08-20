@@ -7,6 +7,7 @@ import com.molva.server.security.jwt.JwtProvider;
 import com.sun.istack.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
@@ -17,18 +18,22 @@ public class ApplicationUserController {
 
   private final ApplicationUserService applicationUserService;
   private final JwtProvider jwtProvider;
+  private final PasswordEncoder passwordEncoder;
   private final String EMAIL_KEY = "EMAIL";
   private final String USERNAME_KEY = "USERNAME";
 
   @Autowired
-  public ApplicationUserController(ApplicationUserService applicationUserService, JwtProvider jwtProvider) {
+  public ApplicationUserController(ApplicationUserService applicationUserService, JwtProvider jwtProvider, PasswordEncoder passwordEncoder) {
     this.applicationUserService = applicationUserService;
     this.jwtProvider = jwtProvider;
+    this.passwordEncoder = passwordEncoder;
   }
 
   @DeleteMapping(path = "/delete/{applicationUserId}")
   @PreAuthorize("hasAuthority('moderator:write')")
-  public void deleteApplicationUserById(@NotNull @PathVariable("applicationUserId") Long applicationUserId) {
+  public void deleteApplicationUserById(@NotNull @PathVariable("applicationUserId") Long applicationUserId,
+                                        @RequestHeader("Authorization") String token) {
+    checkIfIdMatches(token, applicationUserId);
     applicationUserService.deleteApplicationUserById(applicationUserId);
   }
 
@@ -36,7 +41,7 @@ public class ApplicationUserController {
   @PreAuthorize("hasAuthority('moderator:write')")
   public ApplicationUser updateApplicationUserUsername(@NotNull @PathVariable("applicationUserId") Long applicationUserId,
                                                        @RequestHeader("Authorization") String token,
-                                                       @RequestBody String newUsername,
+                                                       @RequestParam("username") String newUsername,
                                                        HttpServletResponse response) {
     ApplicationUser applicationUser = checkIfIdMatches(token, applicationUserId);
     String newToken = jwtProvider.createToken(newUsername, applicationUser.getAuthorities());
@@ -48,7 +53,7 @@ public class ApplicationUserController {
   @PreAuthorize("hasAuthority('moderator:write')")
   public ApplicationUser updateApplicationUserEmail(@NotNull @PathVariable("applicationUserId") Long applicationUserId,
                                                     @RequestHeader("Authorization") String token,
-                                                    @RequestBody String newEmail) {
+                                                    @RequestParam("email") String newEmail) {
     checkIfIdMatches(token, applicationUserId);
     return updateDataByKey(EMAIL_KEY, applicationUserId, newEmail);
   }
@@ -57,10 +62,10 @@ public class ApplicationUserController {
   @PreAuthorize("hasAuthority('moderator:write')")
   public ApplicationUser updateApplicationUserPassword(@NotNull @PathVariable("applicationUserId") Long applicationUserId,
                                                        @RequestHeader("Authorization") String token,
-                                                       @RequestBody String newPassword) {
+                                                       @RequestParam("password") String newPassword) {
     checkIfIdMatches(token, applicationUserId);
     ApplicationUser updatedUser = applicationUserService.loadUserById(applicationUserId);
-    updatedUser.setPassword(newPassword);
+    updatedUser.setPassword(passwordEncoder.encode(newPassword));
     return applicationUserService.updateApplicationUserById(applicationUserId, updatedUser);
   }
 
@@ -77,19 +82,15 @@ public class ApplicationUserController {
   private ApplicationUser updateDataByKey(String key, Long applicationUserId, String newData) {
     try {
       switch (key) {
-        case EMAIL_KEY:
-          applicationUserService.loadAccountByEmail(newData);
-        case USERNAME_KEY:
-          applicationUserService.loadAccountByUsername(newData);
+        case EMAIL_KEY -> applicationUserService.loadAccountByEmail(newData);
+        case USERNAME_KEY -> applicationUserService.loadAccountByUsername(newData);
       }
       throw new UserExceptions.UserAlreadyExistsException();
     } catch (UserExceptions.UserNotFoundException ex) {
       ApplicationUser updatedUser = applicationUserService.loadUserById(applicationUserId);
       switch (key) {
-        case EMAIL_KEY:
-          updatedUser.setEmail(newData);
-        case USERNAME_KEY:
-          updatedUser.setUsername(newData);
+        case EMAIL_KEY -> updatedUser.setEmail(newData);
+        case USERNAME_KEY -> updatedUser.setUsername(newData);
       }
       return applicationUserService.updateApplicationUserById(applicationUserId, updatedUser);
     }
