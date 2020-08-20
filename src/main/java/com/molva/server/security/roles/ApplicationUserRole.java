@@ -12,7 +12,8 @@ import static com.molva.server.security.permissions.ApplicationUserPermission.MO
 
 public enum ApplicationUserRole {
   ADMIN(Sets.newHashSet(
-      ADMIN_WRITE
+      ADMIN_WRITE,
+      MODERATOR_WRITE
   )),
   MODERATOR(Sets.newHashSet(
       MODERATOR_WRITE
