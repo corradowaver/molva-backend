@@ -3,6 +3,7 @@ package com.molva.server.data.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.molva.server.security.roles.ApplicationUserRole;
+import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -14,7 +15,8 @@ import static com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY;
 
 @Entity
 @Table(name = "application_user")
-public class ApplicationUser implements UserDetails {
+public @Data
+class ApplicationUser implements UserDetails {
   @Id
   @GeneratedValue(strategy = GenerationType.AUTO)
   @Column(name = "id", unique = true, nullable = false)
@@ -120,10 +122,6 @@ public class ApplicationUser implements UserDetails {
     return username;
   }
 
-  public Profile getProfile() {
-    return profile;
-  }
-
   @Override
   public boolean isAccountNonExpired() {
     return isAccountNonExpired;
@@ -144,44 +142,4 @@ public class ApplicationUser implements UserDetails {
     return isEnabled;
   }
 
-  public void setId(Long id) {
-    this.id = id;
-  }
-
-  public void setUsername(String username) {
-    this.username = username;
-  }
-
-  public void setPassword(String password) {
-    this.password = password;
-  }
-
-  public void setApplicationUserRole(ApplicationUserRole applicationUserRole) {
-    this.applicationUserRole = applicationUserRole;
-  }
-
-  public void setAccountNonExpired(boolean accountNonExpired) {
-    isAccountNonExpired = accountNonExpired;
-  }
-
-  public void setAccountNonLocked(boolean accountNonLocked) {
-    isAccountNonLocked = accountNonLocked;
-  }
-
-  public void setCredentialsNotExpired(boolean credentialsNotExpired) {
-    isCredentialsNotExpired = credentialsNotExpired;
-  }
-
-  public void setEnabled(boolean enabled) {
-    isEnabled = enabled;
-  }
-
-  public void setEmail(String email) {
-    this.email = email;
-  }
-
-
-  public void setProfile(Profile profile) {
-    this.profile = profile;
-  }
 }
