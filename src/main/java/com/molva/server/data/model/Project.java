@@ -2,6 +2,7 @@ package com.molva.server.data.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import javax.persistence.*;
 import java.util.Set;
@@ -22,17 +23,20 @@ class Project {
   @Column(name = "description")
   private String description;
 
-  @OneToOne(mappedBy = "previewOwner")
+  @OneToOne(mappedBy = "previewOwner", cascade = CascadeType.REMOVE)
   @JsonIgnore
+  @EqualsAndHashCode.Exclude
   private MediaFile preview;
 
-  @OneToMany(mappedBy = "fileOwner")
+  @OneToMany(mappedBy = "fileOwner", cascade = CascadeType.REMOVE)
   @JsonIgnore
+  @EqualsAndHashCode.Exclude
   private Set<MediaFile> files;
 
   @ManyToOne
   @JoinColumn(name = "application_user_fk")
   @JsonIgnore
+  @EqualsAndHashCode.Exclude
   private ApplicationUser applicationUser;
 
   public Project() {
