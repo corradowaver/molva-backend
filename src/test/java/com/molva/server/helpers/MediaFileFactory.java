@@ -12,7 +12,9 @@ import java.util.Date;
 @Configuration
 public class MediaFileFactory {
   public MediaFile createMediaFile() {
-    return new MediaFile(1L, new Date(), new Date(), "thisismd5stringlolactuallyno", "image/png", 42069);
+    MediaFile mediaFile = new MediaFile(new Date(), new Date(), "thisismd5stringlolactuallyno", "image/png", 42069);
+    mediaFile.setId(1L);
+    return mediaFile;
   }
 
   public MultipartFile createMultipartFile() {
@@ -43,7 +45,7 @@ public class MediaFileFactory {
       }
 
       @Override
-      public byte[] getBytes() throws IOException {
+      public byte[] getBytes() {
         return new byte[0];
       }
 
