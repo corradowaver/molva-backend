@@ -4,6 +4,7 @@ import com.google.common.collect.Sets;
 import com.molva.server.data.exceptions.profile.ProfileExceptions;
 import com.molva.server.data.exceptions.user.UserExceptions;
 import com.molva.server.data.model.ApplicationUser;
+import com.molva.server.data.model.Profile;
 import com.molva.server.data.repository.ApplicationUserRepository;
 import com.molva.server.security.roles.ApplicationUserRole;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,10 +26,13 @@ public class ApplicationUserService implements UserDetailsService {
 
   private final PasswordEncoder passwordEncoder;
 
+  private final MediaFileService mediaFileService;
+
   @Autowired
-  public ApplicationUserService(ApplicationUserRepository applicationUserRepository, PasswordEncoder passwordEncoder) {
+  public ApplicationUserService(ApplicationUserRepository applicationUserRepository, PasswordEncoder passwordEncoder, MediaFileService mediaFileService) {
     this.applicationUserRepository = applicationUserRepository;
     this.passwordEncoder = passwordEncoder;
+    this.mediaFileService = mediaFileService;
   }
 
   public ApplicationUser registerUser(ApplicationUser applicationUser, ApplicationUserRole role) throws InvalidParameterException {
@@ -104,6 +108,14 @@ public class ApplicationUserService implements UserDetailsService {
   }
 
   public void deleteApplicationUserById(Long id) {
+    Optional<ApplicationUser> user = applicationUserRepository.findById(id);
+    if (user.isPresent()) {
+      Profile profile = user.get().getProfile();
+      if ((profile != null) && (profile.getPhoto() != null)) {
+        mediaFileService.deleteMediaFileById(profile.getPhoto().getId());
+      }
+    }
     applicationUserRepository.deleteById(id);
   }
+
 }
