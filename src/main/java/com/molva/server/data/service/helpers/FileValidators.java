@@ -32,6 +32,7 @@ public class FileValidators {
   }
 
   public static void validateVideo(MultipartFile file) {
+    System.out.println(getFileSizeMegaBytes(file));
     if (getFileSizeMegaBytes(file) > 2000) {
       throw new FileExceptions.TooLargeFileException();
     }

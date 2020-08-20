@@ -14,8 +14,7 @@ class MediaFile {
   @Column(name = "id", unique = true, nullable = false)
   private Long id;
 
-  @JoinTable(
-      name = "preview_project",
+  @JoinTable(name = "preview_project",
       joinColumns = @JoinColumn(name = "preview_file_id", referencedColumnName = "id"),
       inverseJoinColumns = @JoinColumn(name = "project_id", referencedColumnName = "id")
   )
@@ -29,14 +28,6 @@ class MediaFile {
   )
   @ManyToOne()
   private Project fileOwner;
-
-  @JoinTable(
-      name = "photo_profile",
-      joinColumns = @JoinColumn(name = "profile_photo_id", referencedColumnName = "id"),
-      inverseJoinColumns = @JoinColumn(name = "profile_id", referencedColumnName = "id")
-  )
-  @OneToOne()
-  private Profile photoOwner;
 
   @Column(name = "created", nullable = false)
   @Temporal(TemporalType.DATE)
@@ -58,6 +49,15 @@ class MediaFile {
   }
 
   public MediaFile(Date created, Date updated, String md5, String mime, long size) {
+    this.created = created;
+    this.updated = updated;
+    this.md5 = md5;
+    this.mime = mime;
+    this.size = size;
+  }
+
+  public MediaFile(Long id, Date created, Date updated, String md5, String mime, long size) {
+    this.id = id;
     this.created = created;
     this.updated = updated;
     this.md5 = md5;
