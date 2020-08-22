@@ -128,7 +128,7 @@ public class ProjectService {
 
   private void setFileOwnerProjectForSingleFile(MediaFile mediaFile, Project owner) {
     mediaFile.setPreviewOwner(owner);
-    mediaFileService.updateMediaFileById(owner.getId(), owner.getPreview());
+    mediaFileService.updateMediaFileById(mediaFile.getId(), owner.getPreview());
   }
 
   private MediaFile saveSingleFileToStorage(MultipartFile file) {
