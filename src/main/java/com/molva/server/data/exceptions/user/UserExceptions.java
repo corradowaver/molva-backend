@@ -15,4 +15,8 @@ public class UserExceptions {
   @ResponseStatus(code = HttpStatus.NOT_FOUND, reason = "User was not found")
   public static class UserNotFoundException extends RuntimeException {
   }
+
+  @ResponseStatus(code = HttpStatus.CONFLICT, reason = "Project creator cannot be project member at the same time")
+  public static class UserIsAlreadyCreatorException extends RuntimeException {
+  }
 }
