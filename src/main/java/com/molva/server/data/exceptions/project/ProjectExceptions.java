@@ -19,4 +19,8 @@ public class ProjectExceptions {
   @ResponseStatus(code = HttpStatus.BAD_REQUEST, reason = "Invalid project description")
   public static class ProjectInvalidDescriptionException extends RuntimeException {
   }
+
+  @ResponseStatus(code = HttpStatus.BAD_REQUEST, reason = "Invalid project")
+  public static class InvalidProjectException extends RuntimeException {
+  }
 }

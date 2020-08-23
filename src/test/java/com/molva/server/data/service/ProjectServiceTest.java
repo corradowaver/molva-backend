@@ -2,14 +2,19 @@ package com.molva.server.data.service;
 
 import com.molva.server.data.exceptions.project.ProjectExceptions;
 import com.molva.server.data.model.ApplicationUser;
+import com.molva.server.data.model.MediaFile;
 import com.molva.server.data.model.Project;
+import com.molva.server.data.repository.ApplicationUserRepository;
+import com.molva.server.data.repository.MediaFileRepository;
 import com.molva.server.data.repository.ProjectRepository;
 import com.molva.server.helpers.ApplicationUserFactory;
+import com.molva.server.helpers.MediaFileFactory;
 import com.molva.server.helpers.ProjectFactory;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
@@ -28,11 +33,20 @@ class ProjectServiceTest {
   @MockBean
   private ProjectRepository repository;
 
+  @MockBean
+  private MediaFileRepository mediaFileRepository;
+
+  @MockBean
+  private ApplicationUserRepository applicationUserRepository;
+
   @Autowired
   ProjectFactory projectFactory;
 
   @Autowired
   ApplicationUserFactory userFactory;
+
+  @Autowired
+  MediaFileFactory mediaFileFactory;
 
   @Test
   void loadAllProjects() {
@@ -62,18 +76,43 @@ class ProjectServiceTest {
   @Test
   void addProject() {
     Project project = projectFactory.createProject();
+    ApplicationUser applicationUser = userFactory.createApplicationUser();
+    MediaFile mediaFile = mediaFileFactory.createMediaFile();
+    mediaFile.setId(1L);
+    applicationUser.setId(2L);
+    project.setId(3L);
+
+    doReturn(Optional.of(project)).when(repository).findById(any(Long.class));
     doReturn(project).when(repository).save(any(Project.class));
-    service.addProject(project);
+    doReturn(Optional.of(applicationUser)).when(applicationUserRepository).findById(any(Long.class));
+    doReturn(applicationUser).when(applicationUserRepository).save(any(ApplicationUser.class));
+    doReturn(mediaFile).when(mediaFileRepository).save(any(MediaFile.class));
+    doReturn(Optional.of(mediaFile)).when(mediaFileRepository).findById(any(Long.class));
+
+    MultipartFile preview = mediaFileFactory.createMultipartFile();
+    service.addProject(project, applicationUser, preview);
     verify(repository, times(1)).save(project);
   }
 
   @Test
   void updateProjectById() {
     Project project = projectFactory.createProject();
+    MultipartFile preview = mediaFileFactory.createMultipartFile();
+    MediaFile mediaFile = mediaFileFactory.createMediaFile();
+    ApplicationUser applicationUser = userFactory.createApplicationUser();
+    mediaFile.setId(1L);
+    project.setId(2L);
+    applicationUser.setId(3L);
+
     doReturn(Optional.of(project)).when(repository).findById(any(Long.class));
     doReturn(project).when(repository).save(any(Project.class));
-    service.updateProjectById(any(Long.class), project);
-    verify(repository, times(1)).save(any(Project.class));
+    doReturn(Optional.of(applicationUser)).when(applicationUserRepository).findById(any(Long.class));
+    doReturn(mediaFile).when(mediaFileRepository).save(any(MediaFile.class));
+    doReturn(Optional.of(mediaFile)).when(mediaFileRepository).findById(any(Long.class));
+
+    Project addedProject = service.addProject(project, applicationUser, preview);
+    service.updateProjectById(any(Long.class), addedProject, preview, null);
+    verify(repository, times(2)).save(any(Project.class));
   }
 
   @Test
@@ -86,11 +125,17 @@ class ProjectServiceTest {
   }
 
   @Test
-  void addProjectMustFailIfProfileExists() {
+  void addProjectMustFailIfProjectExists() {
     Project existingProject = projectFactory.createProject();
+    MultipartFile preview = mediaFileFactory.createMultipartFile();
+    MediaFile mediaFile = mediaFileFactory.createMediaFile();
+    ApplicationUser applicationUser = userFactory.createApplicationUser();
+
     doReturn(Optional.of(existingProject)).when(repository).findProjectByName(any(String.class));
+    doReturn(mediaFile).when(mediaFileRepository).save(any(MediaFile.class));
+    doReturn(Optional.of(mediaFile)).when(mediaFileRepository).findById(any(Long.class));
     assertThrows(ProjectExceptions.ProjectExistsException.class,
-        () -> service.addProject(existingProject));
+        () -> service.addProject(existingProject, applicationUser, preview));
   }
 
   @Test
@@ -111,8 +156,9 @@ class ProjectServiceTest {
   void updateProjectByIdMustFailIfNotFound() {
     Project project = projectFactory.createProject();
     doReturn(Optional.empty()).when(repository).findById(any(Long.class));
+    MultipartFile preview = mediaFileFactory.createMultipartFile();
     assertThrows(ProjectExceptions.ProjectNotFoundException.class,
-        () -> service.updateProjectById(any(Long.class), project));
+        () -> service.updateProjectById(any(Long.class), project, preview, null));
   }
 
   @Test

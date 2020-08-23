@@ -64,4 +64,17 @@ class MediaFile {
     this.mime = mime;
     this.size = size;
   }
+
+  @Override
+  public String toString() {
+    return "MediaFile{" +
+        "id=" + id +
+        ", created=" + created +
+        ", updated=" + updated +
+        ", path='" + path + '\'' +
+        ", mime='" + mime + '\'' +
+        ", md5='" + md5 + '\'' +
+        ", size=" + size +
+        '}';
+  }
 }

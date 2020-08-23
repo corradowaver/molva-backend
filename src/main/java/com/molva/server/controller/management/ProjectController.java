@@ -41,7 +41,10 @@ public class ProjectController {
                             Project project,
                             @RequestParam("preview-multipart") MultipartFile preview) {
     validateProjectData(project, preview, null);
-    return projectService.addProject(project, token, preview);
+    ApplicationUser applicationUser = applicationUserService.loadAccountByUsername(
+        jwtProvider.getUsername(jwtProvider.resolveToken(token))
+    );
+    return projectService.addProject(project, applicationUser, preview);
   }
 
   @PutMapping(path = "/edit/{projectId}")
@@ -49,7 +52,7 @@ public class ProjectController {
   public Project updateProject(@NotNull @PathVariable("projectId") Long projectId,
                                @RequestHeader("Authorization") String token,
                                Project projectData,
-                               @RequestParam("preview-multipart") MultipartFile preview,
+                               @RequestParam(value = "preview-multipart", required = false) MultipartFile preview,
                                @RequestParam(value = "files-multipart", required = false) MultipartFile[] files) {
     throwAnExceptionIfProjectIdNotMatchesUserProjects(token, projectId);
     validateProjectData(projectData, preview, files);
@@ -70,7 +73,9 @@ public class ProjectController {
   ) {
     ProjectValidators.validateProjectName(projectData.getName());
     ProjectValidators.validateProjectDescription(projectData.getDescription());
-    FileValidators.validateMediaFile(preview);
+    if (preview != null) {
+      FileValidators.validateMediaFile(preview);
+    }
     if (files != null) {
       Arrays.stream(files).forEach(FileValidators::validateMediaFile);
     }

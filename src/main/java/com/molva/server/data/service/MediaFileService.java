@@ -95,7 +95,7 @@ public class MediaFileService {
           ).orElseThrow(FileExceptions.InvalidFileException::new);
       mediaFile.setPath(filename);
       return mediaFileRepository.save(mediaFile);
-    } catch (IOException e) {
+    } catch (IOException | NullPointerException e) {
       convertedFile.delete();
       throw new FileExceptions.InvalidFileException();
     }

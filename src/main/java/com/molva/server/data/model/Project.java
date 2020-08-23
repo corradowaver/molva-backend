@@ -48,4 +48,12 @@ class Project {
     this.description = description;
   }
 
+  @Override
+  public String toString() {
+    return "Project{" +
+        "id=" + id +
+        ", name='" + name + '\'' +
+        ", description='" + description + '\'' +
+        '}';
+  }
 }

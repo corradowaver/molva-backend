@@ -9,6 +9,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.*;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
 
 import static com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY;
@@ -56,7 +57,7 @@ class ApplicationUser implements UserDetails {
   private Set<Project> projects;
 
   public ApplicationUser() {
-
+    this.projects = new HashSet<>();
   }
 
   public ApplicationUser(String username,
@@ -85,6 +86,7 @@ class ApplicationUser implements UserDetails {
     this.username = username;
     this.password = password;
     this.email = email;
+    this.projects = new HashSet<>();
   }
 
   @Override

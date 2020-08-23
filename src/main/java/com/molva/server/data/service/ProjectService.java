@@ -1,5 +1,7 @@
 package com.molva.server.data.service;
 
+import com.molva.server.data.exceptions.file.FileExceptions;
+import com.molva.server.data.exceptions.profile.ProfileExceptions;
 import com.molva.server.data.exceptions.project.ProjectExceptions;
 import com.molva.server.data.model.ApplicationUser;
 import com.molva.server.data.model.MediaFile;
@@ -49,17 +51,20 @@ public class ProjectService {
         .orElseThrow(ProjectExceptions.ProjectNotFoundException::new);
   }
 
-  public Project addProject(Project project, String token, MultipartFile preview) {
-    ApplicationUser applicationUser = applicationUserService.loadAccountByUsername(
-        jwtProvider.getUsername(jwtProvider.resolveToken(token))
-    );
+  public Project addProject(Project project, ApplicationUser applicationUser, MultipartFile preview) {
+    throwAnExceptionIfThereIsProjectWithTheSameName(project);
     project.setApplicationUser(applicationUser);
-    Project savedProject = saveProjectIfThereIsNoneWithTheSameName(project);
-    addProjectToUserProjects(applicationUser, savedProject);
-    savedProject.setPreview(saveSingleFileToStorage(preview));
-    updateProjectById(savedProject.getId(), savedProject, preview, null);
-    setFileOwnerProjectForSingleFile(savedProject.getPreview(), savedProject);
-    return projectRepository.save(project);
+    project.setPreview(saveSingleFileToStorage(preview));
+    try {
+      Project savedProject = projectRepository.save(project);
+      addProjectToUserProjects(applicationUser, savedProject);
+      setFileOwnerProjectForSingleFile(savedProject.getPreview(), savedProject);
+      return savedProject;
+    } catch (ProfileExceptions.ProfileNotFoundException
+        | FileExceptions.FileNotFoundException ex) {
+      mediaFileService.deleteMediaFileById(project.getPreview().getId());
+      throw ex;
+    }
   }
 
   public Project updateProjectById(
@@ -71,15 +76,17 @@ public class ProjectService {
     Project project = loadProjectById(id);
     project.setName(newProject.getName());
     project.setDescription(newProject.getDescription());
-    deleteOldFileIfItExists(project.getPreview());
-    project.setPreview(saveSingleFileToStorage(preview));
+    throwAnExceptionIfThereIsProjectWithTheSameName(project);
+    if (preview != null) {
+      deleteOldFileIfItExists(project.getPreview());
+      project.setPreview(saveSingleFileToStorage(preview));
+      setFileOwnerProjectForSingleFile(project.getPreview(), project);
+    }
     if (files != null) {
       project.getFiles().forEach(this::deleteOldFileIfItExists);
       project.setFiles(saveAllFilesToStorage(files));
+      setFileOwnerProjectForEachFile(project.getFiles(), project);
     }
-    project.getPreview().setPreviewOwner(project);
-    setFileOwnerProjectForSingleFile(project.getPreview(), project);
-    setFileOwnerProjectForEachFile(project.getFiles(), project);
     return projectRepository.save(project);
   }
 
@@ -103,13 +110,12 @@ public class ProjectService {
     applicationUserService.updateApplicationUserById(applicationUser.getId(), applicationUser);
   }
 
-  private Project saveProjectIfThereIsNoneWithTheSameName(Project project) {
+  private void throwAnExceptionIfThereIsProjectWithTheSameName(Project project) {
     Optional<Project> projectWithTheSameName =
         projectRepository.findProjectByName(project.getName());
     if (projectWithTheSameName.isPresent()) {
       throw new ProjectExceptions.ProjectExistsException();
     }
-    return projectRepository.save(project);
   }
 
   private Set<MediaFile> saveAllFilesToStorage(MultipartFile[] files) {
@@ -120,10 +126,12 @@ public class ProjectService {
   }
 
   private void setFileOwnerProjectForEachFile(Set<MediaFile> mediaFiles, Project owner) {
-    mediaFiles.forEach(file -> {
-      file.setFileOwner(owner);
-      mediaFileService.updateMediaFileById(file.getId(), file);
-    });
+    if (mediaFiles != null) {
+      mediaFiles.forEach(file -> {
+        file.setFileOwner(owner);
+        mediaFileService.updateMediaFileById(file.getId(), file);
+      });
+    }
   }
 
   private void setFileOwnerProjectForSingleFile(MediaFile mediaFile, Project owner) {
