@@ -54,17 +54,26 @@ class ApplicationUser implements UserDetails {
   private boolean isEnabled;
 
   @OneToMany(mappedBy = "applicationUser", fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
-  private Set<Project> projects;
+  private Set<Project> createdProjects;
+
+  @JoinTable(
+      name = "members_projects",
+      joinColumns = @JoinColumn(name = "project_member_id", referencedColumnName = "id"),
+      inverseJoinColumns = @JoinColumn(name = "project_id", referencedColumnName = "id")
+  )
+  @ManyToMany(fetch = FetchType.EAGER)
+  private Set<Project> joinedProjects;
 
   public ApplicationUser() {
-    this.projects = new HashSet<>();
+    this.createdProjects = new HashSet<>();
+    this.joinedProjects = new HashSet<>();
   }
 
   public ApplicationUser(String username,
                          String password,
                          String email,
                          ApplicationUserRole applicationUserRole,
-                         Set<Project> projects,
+                         Set<Project> createdProjects,
                          boolean isAccountNonExpired,
                          boolean isAccountNonLocked,
                          boolean isCredentialsNotExpired,
@@ -73,7 +82,8 @@ class ApplicationUser implements UserDetails {
     this.password = password;
     this.email = email;
     this.applicationUserRole = applicationUserRole;
-    this.projects = projects;
+    this.createdProjects = createdProjects;
+    this.joinedProjects = new HashSet<>();
     this.isAccountNonExpired = isAccountNonExpired;
     this.isAccountNonLocked = isAccountNonLocked;
     this.isCredentialsNotExpired = isCredentialsNotExpired;
@@ -86,7 +96,8 @@ class ApplicationUser implements UserDetails {
     this.username = username;
     this.password = password;
     this.email = email;
-    this.projects = new HashSet<>();
+    this.createdProjects = new HashSet<>();
+    this.joinedProjects = new HashSet<>();
   }
 
   @Override
@@ -102,16 +113,20 @@ class ApplicationUser implements UserDetails {
     return email;
   }
 
-  public Set<Project> getProjects() {
-    return projects;
+  public Set<Project> getCreatedProjects() {
+    return createdProjects;
   }
 
-  public void setProjects(Set<Project> projects) {
-    this.projects = projects;
+  public void setCreatedProjects(Set<Project> projects) {
+    this.createdProjects = projects;
   }
 
-  public void addProject(Project project) {
-    projects.add(project);
+  public void addCreatedProject(Project project) {
+    createdProjects.add(project);
+  }
+
+  public void addJoinedProject(Project project) {
+    joinedProjects.add(project);
   }
 
   @Override
