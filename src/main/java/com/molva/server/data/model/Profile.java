@@ -2,6 +2,7 @@ package com.molva.server.data.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 import javax.persistence.*;
@@ -28,6 +29,7 @@ class Profile {
 
   @OneToOne
   @JoinColumn(name = "application_user_fk")
+  @EqualsAndHashCode.Exclude
   private ApplicationUser applicationUser;
 
   public Profile() {
