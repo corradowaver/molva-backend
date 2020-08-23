@@ -35,7 +35,7 @@ public class ProjectController {
     this.jwtProvider = jwtProvider;
   }
 
-  @PostMapping(path = "/add")
+  @PostMapping(path = "/add/project")
   @PreAuthorize("hasAuthority('moderator:write')")
   public Project addProject(@RequestHeader("Authorization") String token,
                             Project project,
@@ -47,10 +47,11 @@ public class ProjectController {
     return projectService.addProject(project, applicationUser, preview);
   }
 
-  @PutMapping(path = "/edit/{projectId}")
+  @PutMapping(path = "/edit/project")
   @PreAuthorize("hasAuthority('moderator:write')")
-  public Project updateProject(@NotNull @PathVariable("projectId") Long projectId,
+  public Project updateProject(
                                @RequestHeader("Authorization") String token,
+                               @RequestHeader("id") Long projectId,
                                Project projectData,
                                @RequestParam(value = "preview-multipart", required = false) MultipartFile preview,
                                @RequestParam(value = "files-multipart", required = false) MultipartFile[] files) {
@@ -59,11 +60,20 @@ public class ProjectController {
     return projectService.updateProjectById(projectId, projectData, preview, files);
   }
 
-  @DeleteMapping(path = "/delete/{projectId}")
+  @DeleteMapping(path = "/delete/project")
   public void deleteProject(@RequestHeader("Authorization") String token,
-                            @NotNull @PathVariable("projectId") Long projectId) {
+                            @RequestHeader("id") Long projectId) {
     throwAnExceptionIfProjectIdNotMatchesUserProjects(token, projectId);
     projectService.deleteProjectById(projectId);
+  }
+
+  @PostMapping(path = "/add/member")
+  @PreAuthorize("hasAuthority('moderator:write')")
+  public Project addMemberToProject(@RequestHeader("Authorization") String token,
+                                    @RequestHeader("id") Long projectId,
+                                    @RequestHeader("member-id") Long memberId) {
+    throwAnExceptionIfProjectIdNotMatchesUserProjects(token, projectId);
+    return projectService.addProjectMember(projectId, memberId);
   }
 
   public void validateProjectData(
@@ -86,7 +96,7 @@ public class ProjectController {
         jwtProvider.getUsername(jwtProvider.resolveToken(token))
     );
     if (applicationUser
-        .getProjects()
+        .getCreatedProjects()
         .stream()
         .noneMatch((project) -> (project.getApplicationUser() == applicationUser) && (project.getId().equals(id)))) {
       throw new ProfileExceptions.ProfileNotFoundException();

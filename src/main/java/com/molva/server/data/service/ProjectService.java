@@ -3,11 +3,11 @@ package com.molva.server.data.service;
 import com.molva.server.data.exceptions.file.FileExceptions;
 import com.molva.server.data.exceptions.profile.ProfileExceptions;
 import com.molva.server.data.exceptions.project.ProjectExceptions;
+import com.molva.server.data.exceptions.user.UserExceptions;
 import com.molva.server.data.model.ApplicationUser;
 import com.molva.server.data.model.MediaFile;
 import com.molva.server.data.model.Project;
 import com.molva.server.data.repository.ProjectRepository;
-import com.molva.server.security.jwt.JwtProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,19 +20,16 @@ public class ProjectService {
   private final ProjectRepository projectRepository;
   private final MediaFileService mediaFileService;
   private final ApplicationUserService applicationUserService;
-  private final JwtProvider jwtProvider;
 
   @Autowired
   ProjectService(
       ProjectRepository projectRepository,
       MediaFileService mediaFileService,
-      ApplicationUserService applicationUserService,
-      JwtProvider jwtProvider
+      ApplicationUserService applicationUserService
   ) {
     this.projectRepository = projectRepository;
     this.mediaFileService = mediaFileService;
     this.applicationUserService = applicationUserService;
-    this.jwtProvider = jwtProvider;
   }
 
   public List<Project> loadAllProjects() {
@@ -106,7 +103,7 @@ public class ProjectService {
   }
 
   private void addProjectToUserProjects(ApplicationUser applicationUser, Project project) {
-    applicationUser.addProject(project);
+    applicationUser.addCreatedProject(project);
     applicationUserService.updateApplicationUserById(applicationUser.getId(), applicationUser);
   }
 
@@ -142,4 +139,18 @@ public class ProjectService {
   private MediaFile saveSingleFileToStorage(MultipartFile file) {
     return mediaFileService.addMediaFile(file);
   }
+
+  public Project addProjectMember(Long projectId, Long memberId) {
+    Project project = loadProjectById(projectId);
+    ApplicationUser user = applicationUserService.loadUserById(memberId);
+    if (!user.getId().equals(project.getApplicationUser().getId())) {
+      user.addJoinedProject(project);
+      applicationUserService.updateApplicationUserById(user.getId(), user);
+      project.addMember(user);
+      return projectRepository.save(project);
+    } else {
+      throw new UserExceptions.UserIsAlreadyCreatorException();
+    }
+  }
+  //TODO Deletion
 }
