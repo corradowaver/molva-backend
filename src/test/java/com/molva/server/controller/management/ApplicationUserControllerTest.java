@@ -6,15 +6,14 @@ import com.molva.server.data.service.ApplicationUserService;
 import com.molva.server.data.service.ProfileService;
 import com.molva.server.helpers.ApplicationUserFactory;
 import com.molva.server.security.jwt.JwtProvider;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -46,14 +45,22 @@ class ApplicationUserControllerTest {
   @MockBean
   JwtProvider jwtProvider;
 
+
+  @BeforeEach
+  public void setUpCheckIfIdMatches() {
+    ApplicationUser user = factory.createRegisteredModerator(4L);
+    doReturn("token").when(jwtProvider).resolveToken(any(String.class));
+    doReturn(user.getUsername()).when(jwtProvider).getUsername(any(String.class));
+    doReturn(user).when(userService).loadAccountByUsername(any(String.class));
+  }
+
   @Test
   @WithMockUser(authorities = "moderator:write")
-    //TODO Почему модератор может, а админ не может -_-
   void deleteApplicationUserById() throws Exception {
     doNothing().when(userService).deleteApplicationUserById(any(Long.class));
     mockMvc.perform(delete("/management/api/v1/account/delete/{applicationUserId}", "4")
-        .contentType(MediaType.APPLICATION_JSON)
-        .accept(MediaType.APPLICATION_JSON))
+        .header("Authorization", "Bearer token")
+    )
         .andExpect(status().isOk());
   }
 
@@ -72,9 +79,7 @@ class ApplicationUserControllerTest {
     doReturn(user).when(userService).loadUserById(any(Long.class));
     mockMvc.perform(put("/management/api/v1/account/edit/username/{applicationUserId}", user.getId())
         .header("Authorization", "Bearer token")
-        .contentType(MediaType.APPLICATION_JSON)
-        .content(NEW_USERNAME)
-        .accept(MediaType.APPLICATION_JSON))
+        .param("username", NEW_USERNAME))
         .andExpect(status().isOk());
   }
 
@@ -84,8 +89,7 @@ class ApplicationUserControllerTest {
     ApplicationUser user = factory.createRegisteredModerator(4L);
     mockMvc.perform(put("/management/api/v1/account/edit/username/{applicationUserId}", user.getId())
         .header("Authorization", "Bearer token")
-        .contentType(MediaType.APPLICATION_JSON)
-        .accept(MediaType.APPLICATION_JSON))
+    )
         .andExpect(status().isBadRequest());
   }
 
@@ -104,9 +108,7 @@ class ApplicationUserControllerTest {
     doReturn(user).when(userService).loadUserById(any(Long.class));
     mockMvc.perform(put("/management/api/v1/account/edit/username/{applicationUserId}", user.getId())
         .header("Authorization", "Bearer token")
-        .contentType(MediaType.APPLICATION_JSON)
-        .content(NEW_USERNAME)
-        .accept(MediaType.APPLICATION_JSON))
+        .param("username", OLD_USERNAME))
         .andExpect(status().isConflict());
   }
 
@@ -126,9 +128,7 @@ class ApplicationUserControllerTest {
     doReturn(user).when(userService).loadUserById(any(Long.class));
     mockMvc.perform(put("/management/api/v1/account/edit/username/{applicationUserId}", user.getId())
         .header("Authorization", "Bearer token")
-        .contentType(MediaType.APPLICATION_JSON)
-        .content(NEW_USERNAME)
-        .accept(MediaType.APPLICATION_JSON))
+        .param("username", NEW_USERNAME))
         .andExpect(status().isNotFound());
   }
 
@@ -146,9 +146,7 @@ class ApplicationUserControllerTest {
     doReturn(user).when(userService).loadUserById(any(Long.class));
     mockMvc.perform(put("/management/api/v1/account/edit/email/{applicationUserId}", user.getId())
         .header("Authorization", "Bearer token")
-        .contentType(MediaType.APPLICATION_JSON)
-        .content(NEW_EMAIL)
-        .accept(MediaType.APPLICATION_JSON))
+        .param("email", NEW_EMAIL))
         .andExpect(status().isOk());
   }
 
@@ -158,8 +156,7 @@ class ApplicationUserControllerTest {
     ApplicationUser user = factory.createRegisteredModerator(4L);
     mockMvc.perform(put("/management/api/v1/account/edit/email/{applicationUserId}", user.getId())
         .header("Authorization", "Bearer token")
-        .contentType(MediaType.APPLICATION_JSON)
-        .accept(MediaType.APPLICATION_JSON))
+    )
         .andExpect(status().isBadRequest());
   }
 
@@ -178,9 +175,7 @@ class ApplicationUserControllerTest {
     doReturn(user).when(userService).loadUserById(any(Long.class));
     mockMvc.perform(put("/management/api/v1/account/edit/email/{applicationUserId}", user.getId())
         .header("Authorization", "Bearer token")
-        .contentType(MediaType.APPLICATION_JSON)
-        .content(NEW_EMAIL)
-        .accept(MediaType.APPLICATION_JSON))
+        .param("email", NEW_EMAIL))
         .andExpect(status().isConflict());
   }
 
@@ -199,9 +194,7 @@ class ApplicationUserControllerTest {
     doReturn(user).when(userService).loadUserById(any(Long.class));
     mockMvc.perform(put("/management/api/v1/account/edit/email/{applicationUserId}", user.getId())
         .header("Authorization", "Bearer token")
-        .contentType(MediaType.APPLICATION_JSON)
-        .content(NEW_EMAIL)
-        .accept(MediaType.APPLICATION_JSON))
+        .param("email", NEW_EMAIL))
         .andExpect(status().isNotFound());
   }
 
@@ -219,9 +212,7 @@ class ApplicationUserControllerTest {
 
     mockMvc.perform(put("/management/api/v1/account/edit/password/{applicationUserId}", user.getId())
         .header("Authorization", "Bearer token")
-        .contentType(MediaType.APPLICATION_JSON)
-        .content(NEW_PASSWORD)
-        .accept(MediaType.APPLICATION_JSON))
+        .param("password", NEW_PASSWORD))
         .andExpect(status().isOk());
   }
 
@@ -231,8 +222,7 @@ class ApplicationUserControllerTest {
     ApplicationUser user = factory.createRegisteredModerator(4L);
     mockMvc.perform(put("/management/api/v1/account/edit/password/{applicationUserId}", user.getId())
         .header("Authorization", "Bearer token")
-        .contentType(MediaType.APPLICATION_JSON)
-        .accept(MediaType.APPLICATION_JSON))
+    )
         .andExpect(status().isBadRequest());
   }
 
@@ -251,9 +241,7 @@ class ApplicationUserControllerTest {
 
     mockMvc.perform(put("/management/api/v1/account/edit/password/{applicationUserId}", user.getId())
         .header("Authorization", "Bearer token")
-        .contentType(MediaType.APPLICATION_JSON)
-        .content(NEW_PASSWORD)
-        .accept(MediaType.APPLICATION_JSON))
+        .param("password", NEW_PASSWORD))
         .andExpect(status().isNotFound());
   }
 }
