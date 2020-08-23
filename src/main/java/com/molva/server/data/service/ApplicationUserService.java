@@ -46,7 +46,7 @@ public class ApplicationUserService implements UserDetailsService {
         throw new UserExceptions.UserAlreadyExistsException();
       }
       applicationUser.setApplicationUserRole(role);
-      applicationUser.setProjects(Sets.newHashSet());
+      applicationUser.setCreatedProjects(Sets.newHashSet());
       applicationUser.setPassword(passwordEncoder.encode(applicationUser.getPassword()));
       applicationUser.setAccountNonExpired(true);
       applicationUser.setAccountNonLocked(true);
