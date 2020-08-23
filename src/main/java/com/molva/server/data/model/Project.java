@@ -39,6 +39,11 @@ class Project {
   @EqualsAndHashCode.Exclude
   private ApplicationUser applicationUser;
 
+  @ManyToMany(mappedBy = "joinedProjects")
+  @JsonIgnore
+  @EqualsAndHashCode.Exclude
+  private Set<ApplicationUser> members;
+
   public Project() {
 
   }
@@ -55,5 +60,9 @@ class Project {
         ", name='" + name + '\'' +
         ", description='" + description + '\'' +
         '}';
+  }
+
+  public void addMember(ApplicationUser user) {
+    members.add(user);
   }
 }
