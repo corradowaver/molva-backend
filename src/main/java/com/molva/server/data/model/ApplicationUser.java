@@ -125,8 +125,12 @@ class ApplicationUser implements UserDetails {
     createdProjects.add(project);
   }
 
-  public void addJoinedProject(Project project) {
-    joinedProjects.add(project);
+  public boolean addJoinedProject(Project project) {
+    return joinedProjects.add(project);
+  }
+
+  public boolean removeJoinedProject(Project project) {
+    return joinedProjects.remove(project);
   }
 
   @Override

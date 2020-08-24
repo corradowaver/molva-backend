@@ -62,7 +62,11 @@ class Project {
         '}';
   }
 
-  public void addMember(ApplicationUser user) {
-    members.add(user);
+  public boolean addMember(ApplicationUser user) {
+    return members.add(user);
+  }
+
+  public boolean removeMember(ApplicationUser user) {
+    return members.remove(user);
   }
 }
