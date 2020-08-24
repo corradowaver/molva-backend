@@ -76,6 +76,15 @@ public class ProjectController {
     return projectService.addProjectMember(projectId, memberId);
   }
 
+  @DeleteMapping(path = "/delete/member")
+  @PreAuthorize("hasAuthority('moderator:write')")
+  public Project deleteMemberFromProject(@RequestHeader("Authorization") String token,
+                                    @RequestHeader("id") Long projectId,
+                                    @RequestHeader("member-id") Long memberId) {
+    throwAnExceptionIfProjectIdNotMatchesUserProjects(token, projectId);
+    return projectService.removeProjectMember(projectId, memberId);
+  }
+
   public void validateProjectData(
       Project projectData,
       MultipartFile preview,

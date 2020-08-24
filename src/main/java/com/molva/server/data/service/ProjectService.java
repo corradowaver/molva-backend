@@ -152,5 +152,19 @@ public class ProjectService {
       throw new UserExceptions.UserIsAlreadyCreatorException();
     }
   }
-  //TODO Deletion
+
+  public Project removeProjectMember(Long projectId, Long memberId) {
+    Project project = loadProjectById(projectId);
+    ApplicationUser user = applicationUserService.loadUserById(memberId);
+    if (!user.getId().equals(project.getApplicationUser().getId())) {
+      if (user.removeJoinedProject(project) && project.removeMember(user)) {
+        applicationUserService.updateApplicationUserById(user.getId(), user);
+        return projectRepository.save(project);
+      } else {
+        throw new UserExceptions.UserNotFoundException();
+      }
+    } else {
+      throw new UserExceptions.UserIsAlreadyCreatorException();
+    }
+  }
 }
