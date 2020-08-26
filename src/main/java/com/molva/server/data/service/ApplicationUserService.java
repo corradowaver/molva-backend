@@ -5,9 +5,11 @@ import com.molva.server.data.exceptions.profile.ProfileExceptions;
 import com.molva.server.data.exceptions.user.UserExceptions;
 import com.molva.server.data.model.ApplicationUser;
 import com.molva.server.data.model.Profile;
+import com.molva.server.data.model.Project;
 import com.molva.server.data.repository.ApplicationUserRepository;
 import com.molva.server.security.roles.ApplicationUserRole;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.security.InvalidParameterException;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -28,11 +31,15 @@ public class ApplicationUserService implements UserDetailsService {
 
   private final MediaFileService mediaFileService;
 
+  private final ProjectService projectService;
+
   @Autowired
-  public ApplicationUserService(ApplicationUserRepository applicationUserRepository, PasswordEncoder passwordEncoder, MediaFileService mediaFileService) {
+  public ApplicationUserService(ApplicationUserRepository applicationUserRepository, PasswordEncoder passwordEncoder,
+                                MediaFileService mediaFileService, @Lazy ProjectService projectService) {
     this.applicationUserRepository = applicationUserRepository;
     this.passwordEncoder = passwordEncoder;
     this.mediaFileService = mediaFileService;
+    this.projectService = projectService;
   }
 
   public ApplicationUser registerUser(ApplicationUser applicationUser, ApplicationUserRole role) throws InvalidParameterException {
@@ -113,6 +120,10 @@ public class ApplicationUserService implements UserDetailsService {
       Profile profile = user.get().getProfile();
       if ((profile != null) && (profile.getPhoto() != null)) {
         mediaFileService.deleteMediaFileById(profile.getPhoto().getId());
+      }
+      Set<Project> createdProjects = user.get().getCreatedProjects();
+      if (!createdProjects.isEmpty()) {
+        createdProjects.forEach(project -> projectService.deleteProjectById(project.getId()));
       }
     }
     applicationUserRepository.deleteById(id);

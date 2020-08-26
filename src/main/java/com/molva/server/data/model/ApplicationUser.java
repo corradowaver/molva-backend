@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.molva.server.security.roles.ApplicationUserRole;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -54,6 +55,7 @@ class ApplicationUser implements UserDetails {
   private boolean isEnabled;
 
   @OneToMany(mappedBy = "applicationUser", fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
+  @EqualsAndHashCode.Exclude
   private Set<Project> createdProjects;
 
   @JoinTable(
@@ -62,6 +64,7 @@ class ApplicationUser implements UserDetails {
       inverseJoinColumns = @JoinColumn(name = "project_id", referencedColumnName = "id")
   )
   @ManyToMany(fetch = FetchType.EAGER)
+  @EqualsAndHashCode.Exclude
   private Set<Project> joinedProjects;
 
   public ApplicationUser() {
