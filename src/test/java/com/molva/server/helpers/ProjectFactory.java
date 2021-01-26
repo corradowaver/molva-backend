@@ -11,7 +11,7 @@ import java.util.List;
 @Configuration
 public class ProjectFactory {
   public Project createProject() {
-    return new Project("Molva", "Web-site", "");
+    return new Project("Molva", "Web-site");
   }
 
   public List<Project> createProjectsList() {

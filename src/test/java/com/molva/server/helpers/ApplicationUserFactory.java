@@ -1,7 +1,7 @@
 package com.molva.server.helpers;
 
 import com.molva.server.data.model.ApplicationUser;
-import com.molva.server.data.model.Profile;
+import com.molva.server.security.roles.ApplicationUserRole;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.List;
@@ -12,10 +12,17 @@ import java.util.List;
 @Configuration
 public class ApplicationUserFactory {
   public ApplicationUser createApplicationUser() {
-    return new ApplicationUser("username", "password");
+    return new ApplicationUser("username", "password", "email@mail.com");
   }
 
   public List<ApplicationUser> createApplicationUsers() {
     return List.of(createApplicationUser(), createApplicationUser(), createApplicationUser());
+  }
+
+  public ApplicationUser createRegisteredModerator(long id) {
+    var moderator = new ApplicationUser("username", "password", "email@mail.com",
+        ApplicationUserRole.MODERATOR, null, true, true, true, true);
+    moderator.setId(id);
+    return moderator;
   }
 }

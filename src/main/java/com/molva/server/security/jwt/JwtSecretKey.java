@@ -13,7 +13,7 @@ public class JwtSecretKey {
   private final JwtConfig jwtConfig;
 
   @Autowired
-  public  JwtSecretKey(JwtConfig jwtConfig) {
+  public JwtSecretKey(JwtConfig jwtConfig) {
     this.jwtConfig = jwtConfig;
   }
 
@@ -21,5 +21,4 @@ public class JwtSecretKey {
   public SecretKey secretKey() {
     return Keys.hmacShaKeyFor(jwtConfig.getSecretKey().getBytes());
   }
-
 }

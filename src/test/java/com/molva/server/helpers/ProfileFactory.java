@@ -11,7 +11,7 @@ import java.util.List;
 @Configuration
 public class ProfileFactory {
   public Profile createProfile() {
-    return new Profile("First", "Profile", "email", "photo");
+    return new Profile("First", "Profile");
   }
 
   public List<Profile> createProfilesList() {

@@ -22,27 +22,31 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-web'
-    // https://mvnrepository.com/artifact/com.google.guava/guava
-    compile group: 'com.google.guava', name: 'guava', version: '11.0.2'
-    // https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-api
-    compile group: 'io.jsonwebtoken', name: 'jjwt-api', version: '0.10.5'
-    // https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt
-    compile group: 'io.jsonwebtoken', name: 'jjwt', version: '0.9.0'
-    // https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-jackson
-    runtime group: 'io.jsonwebtoken', name: 'jjwt-jackson', version: '0.10.5'
-    // https://mvnrepository.com/artifact/mysql/mysql-connector-java
-    compile group: 'mysql', name: 'mysql-connector-java', version: '8.0.20'
+    implementation("com.google.guava:guava:29.0-jre")
+
+    compile 'io.jsonwebtoken:jjwt-api:0.11.2'
+    runtime 'io.jsonwebtoken:jjwt-impl:0.11.2',
+            'io.jsonwebtoken:jjwt-jackson:0.11.2'
+
+    implementation('mysql:mysql-connector-java:8.0.20')
+    compile group: 'mysql', name: 'mysql-connector-java', version: '8.0.21'
+    compile group: 'org.springframework.cloud', name: 'spring-cloud-gcp-starters', version: '1.2.4.RELEASE', ext: 'pom'
+    compile group: 'org.springframework.cloud', name: 'spring-cloud-gcp-starter-sql-mysql', version: '1.2.4.RELEASE'
+    compile group: 'org.springframework.cloud', name: 'spring-cloud-gcp-starter-storage', version: '1.2.4.RELEASE'
+
+    // https://mvnrepository.com/artifact/commons-codec/commons-codec
+    compile group: 'commons-codec', name: 'commons-codec', version: '1.14'
 
     implementation 'org.mockito:mockito-core:3.3.3'
 
     compileOnly 'org.projectlombok:lombok'
-    runtimeOnly 'mysql:mysql-connector-java'
     annotationProcessor 'org.projectlombok:lombok'
     annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
     testImplementation('org.springframework.boot:spring-boot-starter-test') {
         exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
     }
     testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation('org.awaitility:awaitility:3.1.6')
 }
 
 test {

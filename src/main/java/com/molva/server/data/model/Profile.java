@@ -1,9 +1,11 @@
 package com.molva.server.data.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 import javax.persistence.*;
-import java.util.Set;
 
 @Entity
 @Table(name = "profile")
@@ -20,27 +22,22 @@ class Profile {
   @Column(name = "lastname")
   private String lastname;
 
-  @Column(name = "email")
-  private String email;
+  @OneToOne(mappedBy = "photoOwner")
+  @JsonIgnore
+  @ToString.Exclude
+  private MediaFile photo;
 
-  @Column(name = "photo")
-  private String photo;
-
-  @OneToMany(mappedBy = "profile", fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
-  private Set<Project> projects;
-
-  @OneToOne(cascade = CascadeType.ALL)
-  @JoinColumn(name = "application_user_fk", referencedColumnName = "id")
+  @OneToOne
+  @JoinColumn(name = "application_user_fk")
+  @EqualsAndHashCode.Exclude
   private ApplicationUser applicationUser;
 
   public Profile() {
   }
 
-  public Profile(String firstname, String lastname, String email, String photo) {
+  public Profile(String firstname, String lastname) {
     this.firstname = firstname;
     this.lastname = lastname;
-    this.email = email;
-    this.photo = photo;
   }
 
 }
